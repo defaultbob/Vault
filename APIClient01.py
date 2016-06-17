@@ -4,6 +4,7 @@ import ConfigParser
 import datetime
 import os
 import ApiClient
+import printProgress
 import VaultService
 
 # Read config
@@ -24,6 +25,10 @@ instance_name = datetime.datetime.now()
 if test_mode:
     instance_name = "TEST %s" % instance_name
 
+i = 0
+l = len(comps)
+printProgress.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+
 for component_json in comps:
     component_type = component_json["type"]
     type_folder = "output/%s/%s/%s" % (domain,
@@ -38,5 +43,8 @@ for component_json in comps:
         if test_mode:
             print "Only output 1 mdl in test mode - done"
             quit()
+    
+    i += 1
+    printProgress.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete' + " - " + component_type, barLength = 50)
 
 print "Done"
