@@ -30,15 +30,14 @@ l = 0
 
 # build list of names first
 for component_json in comps:
-    component_type = component_json["type"]
-    for component_name in component_json["names"]:
-        l += 1
+    l += len(component_json["names"])
+
 printProgress.printProgress(
     i, l, prefix='Progress:', suffix='Complete', barLength=50)
 
 for component_json in comps:
     component_type = component_json["type"]
-    type_folder = "output/%s/%s/%s" % (domain,
+    type_folder = "../output/%s/%s/%s" % (domain,
                                        instance_name, component_type)
 
     os.makedirs(type_folder)
