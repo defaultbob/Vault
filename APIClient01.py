@@ -26,8 +26,15 @@ if test_mode:
     instance_name = "TEST %s" % instance_name
 
 i = 0
-l = len(comps)
-printProgress.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+l = 0
+
+# build list of names first
+for component_json in comps:
+    component_type = component_json["type"]
+    for component_name in component_json["names"]:
+        l += 1
+printProgress.printProgress(
+    i, l, prefix='Progress:', suffix='Complete', barLength=50)
 
 for component_json in comps:
     component_type = component_json["type"]
@@ -36,15 +43,17 @@ for component_json in comps:
 
     os.makedirs(type_folder)
     for component_name in component_json["names"]:
+        name = component_type + "." + component_name
         with open(type_folder + "/" + component_name + ".mdl", "w") as f:
             mdl = VaultService.get_component(
-                client, component_type + "." + component_name)
+                client, name)
             f.write(mdl)
+        i += 1
+        printProgress.printProgress(
+            i, l, prefix='Progress:', suffix='Complete' + " - " + name, barLength=50)
         if test_mode:
             print "Only output 1 mdl in test mode - done"
             quit()
-    
-    i += 1
-    printProgress.printProgress(i, l, prefix = 'Progress:', suffix = 'Complete' + " - " + component_type, barLength = 50)
+
 
 print "Done"
