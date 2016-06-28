@@ -2,7 +2,6 @@
 
 import requests
 
-
 def get_session(domain, user, password, version):
     """Get the vault session"""
     data = auth(domain, user, password, version)
