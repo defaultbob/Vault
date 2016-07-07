@@ -7,6 +7,15 @@ import ApiClient
 import printProgress
 import VaultService
 
+print """
+    ______                                             __      
+   / ____/___  ____ ___  ____  ____  ____  ___  ____  / /______
+  / /   / __ \/ __ `__ \/ __ \/ __ \/ __ \/ _ \/ __ \/ __/ ___/
+ / /___/ /_/ / / / / / / /_/ / /_/ / / / /  __/ / / / /_(__  ) 
+ \____/\____/_/ /_/ /_/ .___/\____/_/ /_/\___/_/ /_/\__/____/  
+                                                                                  
+"""
+
 client = VaultService.get_client()
 
 comps = VaultService.get_component_types(client)
@@ -32,7 +41,7 @@ printProgress.printProgress(
 
 for component_json in comps:
     component_type = component_json["type"]
-    type_folder = "../output/%s/%s/%s" % (client.domain,
+    type_folder = "../output/MDL/%s/%s/%s" % (client.domain,
                                           instance_name, component_type)
 
     os.makedirs(type_folder)

@@ -1,5 +1,6 @@
 """Vault API client"""
 import requests
+import logging
 
 class ApiClient:
 
@@ -15,17 +16,36 @@ class ApiClient:
 
         self.s.headers.update({"Authorization": data["sessionId"]})
 
+        logging.basicConfig(filename='ApiClient.log',level=logging.DEBUG)
+        
     def get_json(self, resource):
         response = self.get(resource)
         return self.parse_response(response)
 
-    def get(self, resource):
-        url = "https://%s/api/v%s.0/%s" % (self.domain,
-                                           self.version, resource)
+    def get_json(self, resource):
+        response = self.get(resource)
+        return self.parse_response(response)
+
+    def get(self, resource):        
+        url = self.url_resource(resource)
         response = self.s.get(url)
+        logging.info(response.text)
         response.raise_for_status()
         return response    
 
+    def post_form(self, resource, payload):
+        url = self.url_resource(resource)
+        headers = {
+            'Content-Type': "application/x-www-form-urlencoded"
+        }
+        response = self.s.request("POST",url, data=payload, headers=headers)
+        response.raise_for_status()
+        return self.parse_response(response)    
+
+    def url_resource(self, resource):
+        url = "https://%s/api/v%s.0/%s" % (self.domain, self.version, resource)
+        return url   
+    
     def get_mdl_json(self, resource):
         response = self.get_mdl(resource)
         return self.parse_response(response)
@@ -41,9 +61,11 @@ class ApiClient:
 
         respStat = json["responseStatus"]
         if(respStat != "SUCCESS"):
+            logging.error("Status was %s" %(respStat))
+            logging.debug(json)
             raise RuntimeError('request got responseStatus %s' % respStat)
 
-        return response.json()
+        return json
 
     @staticmethod
     def auth(domain, user, password, version):
