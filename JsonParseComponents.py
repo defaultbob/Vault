@@ -6,6 +6,7 @@ import printProgress
 import VaultService
 import json
 from xml.etree import ElementTree as ET
+import logging
 
 def process_components(data):
     for component in data:
@@ -13,55 +14,50 @@ def process_components(data):
         type = component["component_type__v"]
         checksum = component["checksum__v"]
         mdl = component["mdl_definition__v"]
-        json_def = component["json_definition__v"]
+        json_str = component["json_definition__v"]
+
+        valid = True
         
-        valid = 'invalid'
-        if(is_valid(json_def)):
-            valid = 'valid'
+        # parse string to object
+        try:
+            json_object = json.loads(json_str)
+        except (ValueError,TypeError):
+            json_object = None
+            valid = False
             
-        type_folder = "../output/JSON/%s/%s/%s/%s" % (client.domain, instance_name, valid, type)
+        folder_name = 'valid'
+        if valid is False:
+            folder_name = 'invalid'
+        
+        type_folder = "../output/JSON/%s/%s/%s/%s" % (client.domain, instance_name, folder_name, type)
         
         if not os.path.exists(type_folder):
             os.makedirs(type_folder)
         
         with open(type_folder + "/" + name + ".json", "w") as f:
-            if(json_def is None):
-                f.write('null')
+            if valid is False:
+                if json_str:
+                    f.write(json_str.encode('utf-8'))
             else:
-                f.write(json_def.encode('utf-8'))            
+                json.dump(json_object, f, indent=4)            
 
 
-def is_valid(myjson):
-    if myjson is None:
-        return False
+def parse_xml(json_object):
+    return False
+    #  try:
+    #      page_markup = json_object["page_markup"]
+    #  except KeyError:
+    #      return json_object
+    #  except TypeError:
+    #      if json_object[0] is None:
+    #          return json_object
+    #     page_markup = json_object[0]["page_markup"]
     
-    try:
-        json_object = json.loads(myjson)
-    except (ValueError,TypeError):
-        return False
-    
-    if isinstance(json_object, list):
-           json_object = json_object[0]
-    
-    if json_object is None:
-        return False
-    
-    # print json_object
-    try:
-        page_markup = json_object["page_markup"]
-    except KeyError:
-        return True
-    except TypeError:
-        if json_object[0] is None:
-            return True
-        page_markup = json_object[0]["page_markup"]
-    
-    try:
-        x = ET.fromstring(page_markup)
-    except ET.ParseError:
-        return False
+    # # # try:
+    # #     x = ET.fromstring(page_markup)
+    # # except ET.ParseError:
+    # #     return False
 
-    return True    
 
 print """
      _ ___  ___  _  _  __   ___   _    ___ ___   _ _____ ___ 
@@ -90,7 +86,9 @@ while size == limit:
     print "Batch %s of %s" %(i, size)
     i+=1
 
+client = None
 print "Done"
+logging.info("-------------------DONE------------------")
 
 
 

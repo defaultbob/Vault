@@ -16,7 +16,7 @@ class ApiClient:
 
         self.s.headers.update({"Authorization": data["sessionId"]})
 
-        logging.basicConfig(filename='ApiClient.log',level=logging.DEBUG)
+        logging.basicConfig(filename='ApiClient.log', level=logging.DEBUG)
         
     def get_json(self, resource):
         response = self.get(resource)
@@ -29,7 +29,7 @@ class ApiClient:
     def get(self, resource):        
         url = self.url_resource(resource)
         response = self.s.get(url)
-        logging.info(response.text)
+        logging.info("GET response: " + response.text)
         response.raise_for_status()
         return response    
 
@@ -38,7 +38,9 @@ class ApiClient:
         headers = {
             'Content-Type': "application/x-www-form-urlencoded"
         }
+        logging.info("POST payload: " + payload)
         response = self.s.request("POST",url, data=payload, headers=headers)
+        logging.info("POST response: " + response.text)
         response.raise_for_status()
         return self.parse_response(response)    
 
@@ -76,6 +78,8 @@ class ApiClient:
 
         response = requests.request(
             "POST", url, params=querystring)
+        
+        logging.info("AUTH POST response: " + response.text)            
         response.raise_for_status()
 
         return response.json()
