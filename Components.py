@@ -6,6 +6,7 @@ import os
 import ApiClient
 import printProgress
 import VaultService
+import mdl
 
 print """
     ______                                             __      

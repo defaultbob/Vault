@@ -5,16 +5,122 @@ import ApiClient
 import printProgress
 import VaultService
 import json
-from xml.etree import ElementTree as ET
+import ast
 import logging
 from docx import Document
+import collections
+from BeautifulSoup import BeautifulSoup as bs
 
-def process_components(data):
+def process_json(json_object, type, table, json_str, valid):
+    # Include full JSON
+    row_cells = table.add_row().cells
     
+    if valid:
+        row_cells[0].text = 'JSON definition'
+        row_cells[1].text = json.dumps(json_object, indent=2)
+    else:                
+        row_cells[0].text = 'JSON definition (invalid)'
+        row_cells[1].text = json_str or ''
+
+    if json_object is not None:
+        obj = json_object
+        if type == 'Pagelayout': #hack until pagelayout fixed
+            obj = json_object[0]
+        
+        write_items(obj, table)     
+                        
+def write_items(dictionary, table):    
+    
+        for attr, value in dictionary.iteritems():
+            if isinstance(value, collections.Iterable) and not isinstance(value, basestring):
+                
+                length = len(value)
+                row_cells = table.add_row().cells
+                row_cells[0].text = write_value(attr).upper()
+                
+                if len(value) > 0: 
+                    i = 1
+                    for item in value:
+                        row_cells = table.add_row().cells
+                        row_cells[0].text = "#" + str(i)
+                        
+                        # if list of strings write at header row
+                        if isinstance(item, basestring):
+                            row_cells[1].text = write_value(item)
+                        
+                        # if json iterate through sub attributes
+                        if isinstance(item, collections.Mapping):
+                            
+                            for attr2, value2 in item.iteritems():
+                                row_cells = table.add_row().cells
+                                row_cells[0].text = "\t" + str(attr2)
+                                row_cells[1].text = write_value(value2)
+                        i+=1                        
+            else:
+                row_cells = table.add_row().cells
+                row_cells[0].text = str(attr)
+                row_cells[1].text = write_value(value)
+
+def is_json(myjson):
+    try:
+        json_object = json.loads(myjson)
+    except (ValueError, TypeError):
+        return False
+
+    if type(json_object) is int:
+        return False
+    return json_object
+
+
+def print_json(obj, tbl, parent=None):
+    if isinstance(obj, list):
+        my_dict = {}
+
+        for idx, val in enumerate(obj):
+            my_dict[idx] = val
+
+        obj = my_dict
+
+    for attr, value in obj.iteritems():
+
+        json_obj = is_json(str(value))
+        if json_obj is False:
+            row_cells = tbl.add_row().cells
+            row_cells[0].text = str(attr)
+            row_cells[1].text = str(value)
+        else:
+            print json_obj
+            print_json(json_obj, tbl, str(attr))
+
+
+def can_decode(type, attribute):
+    if type == "Doctype" and attribute == 'document_name_format':
+        return False
+    if type == "Docfield" and attribute == 'formula':
+        return False
+
+    return True
+
+def write_value(value):
+    if str(value).startswith("<"):
+        soup=bs(str(value))                #make BeautifulSoup
+        return soup.prettify()   #prettify the html
+        # try:
+        #     this_xml = xml.dom.minidom.parseString(str(value))
+        #     return this_xml.toprettyxml(indent="  ")
+        # except xml.parsers.expat.ExpatError:
+        #     print "failed XML parsing for " + str(value) 
+        #     pass
+    
+    return str(value)
+
+
+def process_components(data, type):
+
     document = Document('../output/config.docx')
     document.add_heading('Config report for %s' % client.domain, 0)
 
-    last_type = None 
+    last_type = None
 
     for component in data:
         name = component["component_name__v"]
@@ -35,41 +141,32 @@ def process_components(data):
         if create_doc:
             if (last_type != type):
                 last_type = type
-                document.add_page_break()
+                # document.add_page_break()
                 document.add_heading(type, level=1)
             
             document.add_heading(name, level=2)
 
-            table = document.add_table(rows=4, cols=2)
+            table = document.add_table(rows=3, cols=2)
             table.style = 'Veeva_Table'
             hdr_cells = table.rows[0].cells
             hdr_cells[0].text = 'Attribute'
             hdr_cells[1].text = 'Value'
-            
-            hdr_cells = table.rows[1].cells
-            hdr_cells[0].text = 'name'
-            hdr_cells[1].text = name
 
-            hdr_cells = table.rows[2].cells
-            hdr_cells[0].text = 'valid'
+            hdr_cells = table.rows[1].cells
+            hdr_cells[0].text = 'valid?'
             hdr_cells[1].text = str(valid)
             
             hdr_cells = table.rows[2].cells
             hdr_cells[0].text = 'checksum'
             hdr_cells[1].text = checksum
             
-            row_cells = table.add_row().cells
-            row_cells[0].text = 'MDL'
-            row_cells[1].text = mdl
+            if use_format.upper() == "JSON":
+                process_json(json_object, type, table, json_str, valid)
             
-            row_cells = table.add_row().cells
-            
-            if valid:
-                row_cells[0].text = 'JSON definition'
-                row_cells[1].text = json.dumps(json_object, indent=2)
-            else:                
-                row_cells[0].text = 'JSON definition (invalid)'
-                row_cells[1].text = json_str or ''
+            if use_format.upper() == "MDL":
+                row_cells = table.add_row().cells
+                row_cells[0].text = 'MDL'
+                row_cells[1].text = mdl        
         
         if create_files:
             folder_name = 'valid'
@@ -91,24 +188,6 @@ def process_components(data):
     if create_doc:
         document.save('../output/DOCS/%s-%s.docx' % (client.domain, instance_name))
 
-
-def parse_xml(json_object):
-    return False
-    #  try:
-    #      page_markup = json_object["page_markup"]
-    #  except KeyError:
-    #      return json_object
-    #  except TypeError:
-    #      if json_object[0] is None:
-    #          return json_object
-    #     page_markup = json_object[0]["page_markup"]
-    
-    # # # try:
-    # #     x = ET.fromstring(page_markup)
-    # # except ET.ParseError:
-    # #     return False
-
-
 print """
   .oooooo.                          .o88o.  o8o                  oooooooooo.                                          .oooo.   
  d8P'  `Y8b                         888 `"  `"'                  `888'   `Y8b                                       .dP""Y88b  
@@ -128,9 +207,10 @@ client = VaultService.get_client()
 #create_files = input == 'F'
 #if(input == 'B'):
 create_doc = create_files = True
+use_format = "JSON"
 
 instance_name = datetime.datetime.now()
-print "Components will be in folder: %s" % instance_name 
+print "Format used to get components: " + use_format
 
 limit = 1000
 size = 1000
@@ -142,7 +222,7 @@ while size == limit:
     limit = directory["responseDetails"]["limit"]
     size = directory["responseDetails"]["size"]
     offset += limit
-    process_components(directory["data"])
+    process_components(directory["data"], use_format)
     print "Batch %s of %s" %(i, size)
     i+=1
 
