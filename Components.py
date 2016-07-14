@@ -42,7 +42,7 @@ printProgress.printProgress(
 
 for component_json in comps:
     component_type = component_json["type"]
-    type_folder = "../output/MDL/%s/%s/%s" % (client.domain,
+    type_folder = "../output/MDL API/%s/%s/%s" % (client.domain,
                                           instance_name, component_type)
 
     os.makedirs(type_folder)

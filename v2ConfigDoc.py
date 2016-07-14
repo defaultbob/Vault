@@ -10,6 +10,16 @@ import logging
 from docx import Document
 import collections
 from BeautifulSoup import BeautifulSoup as bs
+import mdl as mdlhelpers
+
+def process_mdl(type, table, mdl_str):
+    
+    dictionary = mdlhelpers.parse_mdl(mdl_str)
+    write_items(dictionary, table)
+    
+    row_cells = table.add_row().cells
+    row_cells[0].text = 'MDL'
+    row_cells[1].text = mdl_str     
 
 def process_json(json_object, type, table, json_str, valid):
     # Include full JSON
@@ -126,19 +136,14 @@ def process_components(data, type):
         name = component["component_name__v"]
         type = component["component_type__v"]
         checksum = component["checksum__v"]
+                
         mdl = component["mdl_definition__v"]
         json_str = component["json_definition__v"]
 
         valid = True
-        
-        # parse string to object
-        try:
-            json_object = json.loads(json_str)
-        except (ValueError,TypeError):
-            json_object = None
-            valid = False
 
         if create_doc:
+            # Common table setup
             if (last_type != type):
                 last_type = type
                 # document.add_page_break()
@@ -146,47 +151,52 @@ def process_components(data, type):
             
             document.add_heading(name, level=2)
 
-            table = document.add_table(rows=3, cols=2)
+            table = document.add_table(rows=2, cols=2)
             table.style = 'Veeva_Table'
             hdr_cells = table.rows[0].cells
             hdr_cells[0].text = 'Attribute'
             hdr_cells[1].text = 'Value'
-
+            
             hdr_cells = table.rows[1].cells
-            hdr_cells[0].text = 'valid?'
-            hdr_cells[1].text = str(valid)
-            
-            hdr_cells = table.rows[2].cells
             hdr_cells[0].text = 'checksum'
-            hdr_cells[1].text = checksum
+            hdr_cells[1].text = checksum        
+
+        if use_format.upper() == "JSON":
+            # parse string to object
+            try:
+                json_object = json.loads(json_str)
+            except (ValueError,TypeError):
+                json_object = None
+                valid = False
+                
+            process_json(json_object, type, table, json_str, valid)
+                
+        elif use_format.upper() == "MDL":
+            process_mdl(type, table, mdl)
             
-            if use_format.upper() == "JSON":
-                process_json(json_object, type, table, json_str, valid)
-            
-            if use_format.upper() == "MDL":
-                row_cells = table.add_row().cells
-                row_cells[0].text = 'MDL'
-                row_cells[1].text = mdl        
-        
         if create_files:
             folder_name = 'valid'
             if valid is False:
                 folder_name = 'invalid'
 
-            type_folder = "../output/JSON/%s/%s/%s/%s" % (client.domain, instance_name, folder_name, type)
+            type_folder = "../output/%s/%s/%s/%s/%s" % (use_format.upper(), client.domain, instance_name, folder_name, type)
             
             if not os.path.exists(type_folder):
                 os.makedirs(type_folder)
             
-            with open(type_folder + "/" + name + ".json", "w") as f:
-                if valid is False:
-                    if json_str:
-                        f.write(json_str.encode('utf-8'))
-                else:
-                    json.dump(json_object, f, indent=4)            
+            with open(type_folder + "/" + name + "." + use_format.lower(), "w") as f:
+                if use_format.upper() == "JSON":
+                    if valid is False:
+                        if json_str:
+                            f.write(json_str.encode('utf-8'))
+                    else:
+                        json.dump(json_object, f, indent=4)
+                elif use_format.upper() == "MDL":
+                    f.write(mdl.encode('utf-8'))
+                                
 
     if create_doc:
-        document.save('../output/DOCS/%s-%s.docx' % (client.domain, instance_name))
+        document.save('../output/DOCS/%s %s-%s.docx' % (use_format, client.domain, instance_name))
 
 print """
   .oooooo.                          .o88o.  o8o                  oooooooooo.                                          .oooo.   
@@ -207,7 +217,7 @@ client = VaultService.get_client()
 #create_files = input == 'F'
 #if(input == 'B'):
 create_doc = create_files = True
-use_format = "JSON"
+use_format = "MDL"
 
 instance_name = datetime.datetime.now()
 print "Format used to get components: " + use_format
