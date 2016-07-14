@@ -41,35 +41,35 @@ def process_json(json_object, type, table, json_str, valid):
                         
 def write_items(dictionary, table):    
     
-        for attr, value in dictionary.iteritems():
-            if isinstance(value, collections.Iterable) and not isinstance(value, basestring):
-                
-                length = len(value)
-                row_cells = table.add_row().cells
-                row_cells[0].text = write_value(attr).upper()
-                
-                if len(value) > 0: 
-                    i = 1
-                    for item in value:
-                        row_cells = table.add_row().cells
-                        row_cells[0].text = "#" + str(i)
+    for attr, value in dictionary.iteritems():
+        if isinstance(value, collections.Iterable) and not isinstance(value, basestring):
+            
+            length = len(value)
+            row_cells = table.add_row().cells
+            row_cells[0].text = write_value(attr).upper()
+            
+            if len(value) > 0: 
+                i = 1
+                for item in value:
+                    row_cells = table.add_row().cells
+                    row_cells[0].text = "#" + str(i)
+                    
+                    # if list of strings write at header row
+                    if isinstance(item, basestring):
+                        row_cells[1].text = write_value(item)
+                    
+                    # if json iterate through sub attributes
+                    if isinstance(item, collections.Mapping):
                         
-                        # if list of strings write at header row
-                        if isinstance(item, basestring):
-                            row_cells[1].text = write_value(item)
-                        
-                        # if json iterate through sub attributes
-                        if isinstance(item, collections.Mapping):
-                            
-                            for attr2, value2 in item.iteritems():
-                                row_cells = table.add_row().cells
-                                row_cells[0].text = "\t" + str(attr2)
-                                row_cells[1].text = write_value(value2)
-                        i+=1                        
-            else:
-                row_cells = table.add_row().cells
-                row_cells[0].text = str(attr)
-                row_cells[1].text = write_value(value)
+                        for attr2, value2 in item.iteritems():
+                            row_cells = table.add_row().cells
+                            row_cells[0].text = "\t" + str(attr2)
+                            row_cells[1].text = write_value(value2)
+                    i+=1                        
+        else:
+            row_cells = table.add_row().cells
+            row_cells[0].text = str(attr)
+            row_cells[1].text = write_value(value)
 
 def is_json(myjson):
     try:
