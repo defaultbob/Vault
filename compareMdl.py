@@ -2,7 +2,7 @@ import VqlComponents
 import VaultService
 import datetime
 import Components
-import subprocess
+#import subprocess
 import os
 
 print """
@@ -23,5 +23,5 @@ Components.output_components(path_mdl, client)
 path_vql = path + "VQL"
 VqlComponents.output_components(path_vql, client)
 
-subprocess.Popen(["open", path])
+# subprocess.Popen(["open", path])
 os.system('bcomp "%s" "%s"' %(path_mdl, path_vql))
