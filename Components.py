@@ -7,57 +7,56 @@ import ApiClient
 import printProgress
 import VaultService
 import mdl
+import sys
 
-print """
-    ______                                             __      
-   / ____/___  ____ ___  ____  ____  ____  ___  ____  / /______
-  / /   / __ \/ __ `__ \/ __ \/ __ \/ __ \/ _ \/ __ \/ __/ ___/
- / /___/ /_/ / / / / / / /_/ / /_/ / / / /  __/ / / / /_(__  ) 
- \____/\____/_/ /_/ /_/ .___/\____/_/ /_/\___/_/ /_/\__/____/  
-                                                                                  
-"""
+def output_components(path, client):
 
-client = VaultService.get_client()
+    comps = VaultService.get_component_types(client)
 
-comps = VaultService.get_component_types(client)
-instance_name = datetime.datetime.now()
+    i = 0
+    l = 0
 
-# Read config
-configParser = ConfigParser.RawConfigParser()
-configParser.readfp(open(r'config.txt'))
-test_mode = configParser.getboolean('credentials', 'test_mode')
+    # build list of names first
+    for component_json in comps:
+        l += len(component_json["names"])
 
-if test_mode:
-    instance_name = "TEST %s" % instance_name
+    printProgress.printProgress(
+        i, l, prefix='Progress:', suffix='Complete', barLength=50)
 
-i = 0
-l = 0
+    for component_json in comps:
+        component_type = component_json["type"]
+        type_folder = (path + "/%s") % (component_type) 
 
-# build list of names first
-for component_json in comps:
-    l += len(component_json["names"])
+        os.makedirs(type_folder)
+        for component_name in component_json["names"]:
+            name = component_type + "." + component_name
+            with open(type_folder + "/" + component_name + ".mdl", "w") as f:
+                mdl = VaultService.get_component(
+                    client, name)
+                f.write(mdl.encode('utf-8'))
+            i += 1
+            printProgress.printProgress(
+                i, l, prefix='Progress:', suffix='Complete' + " - " + name, barLength=50)
+        
+def main():
+                  
+    print """
+     ______                                             __      
+    / ____/___  ____ ___  ____  ____  ____  ___  ____  / /______
+    / /   / __ \/ __ `__ \/ __ \/ __ \/ __ \/ _ \/ __ \/ __/ ___/
+    / /___/ /_/ / / / / / / /_/ / /_/ / / / /  __/ / / / /_(__  ) 
+    \____/\____/_/ /_/ /_/ .___/\____/_/ /_/\___/_/ /_/\__/____/  
+                                                                                    
+    """
 
-printProgress.printProgress(
-    i, l, prefix='Progress:', suffix='Complete', barLength=50)
+    client = VaultService.get_client()
+    instance_name = datetime.datetime.now()
+    path = "../output/MDL API/%s/%s" % (client.domain, instance_name)
+        
+    output_components(path, client)
+    print "Done"
 
-for component_json in comps:
-    component_type = component_json["type"]
-    type_folder = "../output/MDL API/%s/%s/%s" % (client.domain,
-                                          instance_name, component_type)
-
-    os.makedirs(type_folder)
-    for component_name in component_json["names"]:
-        name = component_type + "." + component_name
-        with open(type_folder + "/" + component_name + ".mdl", "w") as f:
-            mdl = VaultService.get_component(
-                client, name)
-            f.write(mdl.encode('utf-8'))
-        i += 1
-        printProgress.printProgress(
-            i, l, prefix='Progress:', suffix='Complete' + " - " + name, barLength=50)
-        if test_mode:
-            print "Only output 1 mdl in test mode - done"
-            quit()
+if __name__ == '__main__':
+    sys.exit(int(main() or 0))
 
 
-print "Done"
