@@ -13,13 +13,15 @@ from BeautifulSoup import BeautifulSoup as bs
 import mdl as mdlhelpers
 
 def process_mdl(type, table, mdl_str):
-    
-    dictionary = mdlhelpers.parse_mdl(mdl_str)
-    write_items(dictionary, table)
-    
+        
     row_cells = table.add_row().cells
     row_cells[0].text = 'MDL'
     row_cells[1].text = mdl_str     
+
+    obj = mdlhelpers.parse_statement(mdl_str)
+    
+    write_items(obj, table)        
+    
 
 def process_json(json_object, type, table, json_str, valid):
     # Include full JSON
@@ -39,11 +41,12 @@ def process_json(json_object, type, table, json_str, valid):
         
         write_items(obj, table)     
                         
-def write_items(dictionary, table):    
-    
-    for attr, value in dictionary.iteritems():
+def write_items(attributes_list, table):    
+        
+    for attr, value in attributes_list:
+        
         if isinstance(value, collections.Iterable) and not isinstance(value, basestring):
-            
+            # subcomponent
             length = len(value)
             row_cells = table.add_row().cells
             row_cells[0].text = write_value(attr).upper()
@@ -164,12 +167,21 @@ def process_components(data, type):
         if use_format.upper() == "JSON":
             # parse string to object
             try:
-                json_object = json.loads(json_str)
+                json_dictionary = json.loads(json_str)
             except (ValueError,TypeError):
-                json_object = None
+                attributes_list = None
                 valid = False
+            
+            if json_dictionary:
+                if isinstance(json_dictionary, dict):
+                    attributes_list = [(a, v) for a, v in json_dictionary.iteritems()]
+                elif isinstance(json_dictionary, list):
+                    attributes_list = [("", json_dictionary[0])]
+            else:
+                attributes_list = None
                 
-            process_json(json_object, type, table, json_str, valid)
+            if attributes_list:
+                process_json(attributes_list, type, table, json_str, valid)
                 
         elif use_format.upper() == "MDL":
             process_mdl(type, table, mdl)
@@ -190,7 +202,7 @@ def process_components(data, type):
                         if json_str:
                             f.write(json_str.encode('utf-8'))
                     else:
-                        json.dump(json_object, f, indent=4)
+                        json.dump(attributes_list, f, indent=4)
                 elif use_format.upper() == "MDL":
                     f.write(mdl.encode('utf-8'))
                                 

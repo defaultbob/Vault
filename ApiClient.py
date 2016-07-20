@@ -1,6 +1,11 @@
 """Vault API client"""
 import requests
 import logging
+import json
+
+class ApiException(Exception):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
 
 class ApiClient:
 
@@ -22,9 +27,13 @@ class ApiClient:
         response = self.get(resource)
         return self.parse_response(response)
 
-    def get_json(self, resource):
-        response = self.get(resource)
-        return self.parse_response(response)
+    def get_json_obj(self, resource):
+        json_str = self.get_json(resource)
+        try:
+            json_object = json.loads(json_str)
+        except (ValueError,TypeError):
+            json_object = None
+        return json_object
 
     def get(self, resource):        
         url = self.url_resource(resource)
@@ -65,7 +74,7 @@ class ApiClient:
         if(respStat != "SUCCESS"):
             logging.error("Status was %s" %(respStat))
             logging.debug(json)
-            raise RuntimeError('request got responseStatus %s' % respStat)
+            raise ApiException('request got responseStatus %s' % respStat)
 
         return json
 
@@ -83,5 +92,3 @@ class ApiClient:
         response.raise_for_status()
 
         return response.json()
-
-
