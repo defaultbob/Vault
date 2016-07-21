@@ -37,11 +37,11 @@ def convert_json_to_markdown(json_definition):
     words = dict(get_user_strings())
 
     if json_definition:
-        component = cs.Component_Schema(json_definition)
-        append_line(markdown, "# " + component.name)
-        
-        if component.populated:
-
+        response = cs.Response(json_definition)
+        if response.component:
+            component = response.component
+            append_line(markdown, "# " + component.name)
+            
             if words.has_key(component.name +'_overview'):
                 append_line(markdown, words[component.name +'_overview'])
                 append_line(markdown, '')
@@ -56,11 +56,13 @@ def convert_json_to_markdown(json_definition):
             append_line(markdown, component_attribute_markdown)
 
             for sub in component.sub_components:
-                append_line(markdown, '### ' + words['sub_component'] + ' ' + words["separator"] + ' ' + sub)
+                append_line(markdown, '### ' + words['sub_component'] + ' ' + words["separator"] + ' ' + sub.name)
                 sub_component_attribute_markdown = build_attribute_markdown(sub, words)
                 append_line(markdown, sub_component_attribute_markdown)
 
             return to_string(markdown)
+        else:   
+            append_line(markdown, "# " + response.name)
 
     append_line(markdown, "*" + words["no_docs"] + "*")
     return to_string(markdown)
@@ -69,11 +71,11 @@ def build_attribute_markdown(component, words):
     md = []
     append_line(md,'')
 
-    append_line(md, '|' + words['attribute']+'|' + words['description'] + '|')
+    append_line(md, '|' + words['attribute']+ '|' + words['description'] + '|')
     append_line(md, '|-|-|')
     
     for attr in component.attributes:                
-        append_line(md, '|' + attr.name +'|'+ get_attribute(words, component.name + '.' + attr.name) + '|')
+        append_line(md, '|`' + attr.name +'`|'+ get_attribute(words, component.name + '.' + attr.name) + '|')
 
     return ''.join(md)
 
@@ -103,15 +105,20 @@ def main():
 |/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|
     """
 
+    dump = True
+    
     client = VaultService.get_client()
     instance_name = datetime.datetime.now()
 
-    dump_files(client, instance_name)
+    if dump:
+        dump_files(client, instance_name)
+        
     
     components = mdl.get_component_definitions(client)
     for type,json_definition in components:
         markdown = convert_json_to_markdown(json_definition)
-        print markdown
+        if not dump:
+            print markdown
 
 if __name__ == '__main__':
     main()

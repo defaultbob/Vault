@@ -1,36 +1,27 @@
 
+class Response(object):
+     def __init__(self, json_definition):            
+                
+        if json_definition["responseStatus"] == 'SUCCESS':
+            self.component = Component_Schema(json_definition["data"])
+        else:
+            self.component = None
+            self.name = json_definition["data"]["name"]
+
 class Component_Schema(object):
 
     def __init__(self, json_definition):
         
-        self.name = json_definition["data"]["name"]
-        if json_definition["responseStatus"] == 'SUCCESS':
-            self.abbreviation = json_definition["data"]["abbreviation"]
-            self.attributes = self.build_attributes(json_definition)
-            self.sub_components = self.build_sub_components(json_definition)
-            self.populated = True
-        else:
-            self.populated = False
+        self.name = json_definition["name"]
+        self.abbreviation = json_definition["abbreviation"]
+        self.attributes = build_attributes(json_definition)
+        self.sub_components = build_sub_components(json_definition)
 
-    def build_attributes(self, json_definition):
-        json_attributes = json_definition["data"]["attributes"]
-        attributes = []
-        for attribute in json_attributes:
-            attributes.append(Component_Attribute(attribute))
+class Sub_Component(object):
+    def __init__(self, json_definition):
+        self.name = json_definition["name"]
+        self.attributes = build_attributes(json_definition)
 
-        return attributes 
-    
-    def build_sub_components(self, json_definition):
-        subs = []
-        data = dict(json_definition["data"])
-
-        if data.has_key("sub_components"):
-            json_subs = data["sub_components"]
-            for sub in json_subs:
-                subs.append(sub["name"])
-
-        return subs 
-    
 class Component_Attribute(object):
     def __init__(self, attribute_definition):
         self.name = str(get_attribute(attribute_definition, "name"))
@@ -43,9 +34,6 @@ class Component_Attribute(object):
 
         if self.type.upper() == 'COMPONENT':
             self.component = str(get_attribute(attribute_definition, "component"))
-    
-
-
 
 # Common Helpers
 
@@ -59,3 +47,22 @@ def get_attribute(dictionary, key):
             return d[key]
 
     return None 
+
+def build_attributes(json_definition):
+    json_attributes = json_definition["attributes"]
+    attributes = []
+    for attribute in json_attributes:
+        attributes.append(Component_Attribute(attribute))
+
+    return attributes 
+
+def build_sub_components(json_definition):
+    subs = []
+    data = dict(json_definition)
+
+    if data.has_key("sub_components"):
+        json_subs = data["sub_components"]
+        for sub in json_subs:
+            subs.append(Sub_Component(sub))
+
+    return subs 
