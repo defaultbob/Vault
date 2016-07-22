@@ -1,10 +1,10 @@
 
-import ConfigParser
+import configparser as cp
 import ApiClient
 
 def get_client():
     # Read config
-    configParser = ConfigParser.RawConfigParser()
+    configParser = cp.RawConfigParser()
     configParser.readfp(open(r'config.txt'))
 
     domain = configParser.get('credentials', 'domain')

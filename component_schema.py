@@ -43,7 +43,7 @@ def is_required(str_requiredness):
 def get_attribute(dictionary, key):
     if dictionary:
         d = dict(dictionary)
-        if d.has_key(key):
+        if  key in d:
             return d[key]
 
     return None 
@@ -60,7 +60,7 @@ def build_sub_components(json_definition):
     subs = []
     data = dict(json_definition)
 
-    if data.has_key("sub_components"):
+    if "sub_components" in data:
         json_subs = data["sub_components"]
         for sub in json_subs:
             subs.append(Sub_Component(sub))

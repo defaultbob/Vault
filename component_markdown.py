@@ -7,12 +7,15 @@ import Helpers
 import json
 import ast
 import component_schema as cs
-
+import sys
 
 def append_line(str_list, line):
     str_list.append(line)
     str_list.append('\n')
 
+def append_line_html(str_list, line):
+    str_list.append(line)
+    str_list.append('<br/>')
 
 def to_string(str_list):
     return ''.join(str_list)
@@ -26,7 +29,7 @@ def get_user_strings():
 def get_attribute(dictionary, key):
     if dictionary:
         d = dict(dictionary)
-    if d.has_key(key):
+    if key in d:
         return d[key]
 
     return '' 
@@ -42,7 +45,7 @@ def convert_json_to_markdown(json_definition):
             component = response.component
             append_line(markdown, "# " + component.name)
             
-            if words.has_key(component.name +'_overview'):
+            if (component.name +'_overview') in words:
                 append_line(markdown, words[component.name +'_overview'])
                 append_line(markdown, '')
                 append_line(markdown, words[component.name +'_description'])
@@ -67,22 +70,54 @@ def convert_json_to_markdown(json_definition):
     append_line(markdown, "*" + words["no_docs"] + "*")
     return to_string(markdown)
 
+def get_attribute_description(words, component, attribute_name):
+    return get_attribute(words, component + '.' + attribute_name)
+
+def get_attribute_allows(words, attribute:cs.Component_Attribute) -> str:
+    cell = []
+    
+    append_line_html(cell, words["type"] + ' ' + words["separator"] + ' ' + attribute.type)
+    append_line_html(cell, words["required"] + ' ' + words["separator"] + ' ' + str(attribute.required))
+    
+    return ''.join(cell).rstrip('<br/>')
+
+def add_column(row, value):
+    # if first column
+    if row == '':
+        row = '|'
+
+    row = row + str(value) + '|'
+    return row
+
+def header_seperator(columns):
+    return ('|-' * columns) + '|'
+
 def build_attribute_markdown(component, words):
     md = []
     append_line(md,'')
 
-    append_line(md, '|' + words['attribute']+ '|' + words['description'] + '|')
-    append_line(md, '|-|-|')
+    # | Attribute | Allows | Description | 
+    header_row = '' 
+    header_row = add_column(header_row, words['attribute_header'])
+    header_row = add_column(header_row, words['allows_header'])
+    header_row = add_column(header_row, words['description_header'])
+    append_line(md, header_row)
     
-    for attr in component.attributes:                
-        append_line(md, '|`' + attr.name +'`|'+ get_attribute(words, component.name + '.' + attr.name) + '|')
+    append_line(md, header_seperator(3))
+    
+    for attr in component.attributes:       
+        attribute_row = ''
+        attribute_row = add_column(attribute_row, '`' + attr.name +'`')
+        attribute_row = add_column(attribute_row, get_attribute_allows(words, attr))
+        attribute_row = add_column(attribute_row, get_attribute_description(words, component.name, attr.name))
+        append_line(md, attribute_row)
 
     return ''.join(md)
 
 def dump_files(client, instance_name):
     
     path = "../output/Markdown/%s/%s/" % (client.domain, instance_name)
-    print "dumping files to: " + path
+    print("dumping files to: " + path)
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -95,7 +130,7 @@ def dump_files(client, instance_name):
     subprocess.Popen(["open", path])
 
 def main():
-    print """
+    print("""
  _______ _______ _______ _______ _______ _______ _______ _______ 
 |\     /|\     /|\     /|\     /|\     /|\     /|\     /|\     /|
 | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ |
@@ -103,8 +138,8 @@ def main():
 | |M  | | |A  | | |R  | | |K  | | |D  | | |O  | | |W  | | |N  | |
 | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ | +---+ |
 |/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|
-    """
-
+    """)
+    print(sys.version)
     dump = True
     
     client = VaultService.get_client()
@@ -112,13 +147,13 @@ def main():
 
     if dump:
         dump_files(client, instance_name)
-        
+
     
     components = mdl.get_component_definitions(client)
     for type,json_definition in components:
         markdown = convert_json_to_markdown(json_definition)
         if not dump:
-            print markdown
+            print(markdown)
 
 if __name__ == '__main__':
     main()

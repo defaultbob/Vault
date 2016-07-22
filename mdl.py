@@ -102,7 +102,7 @@ def get_component_definition(name, client):
             "data": {
                 "name": name
             },
-            "error":e.message
+            "error": str(e)
         }
 
     return definition     

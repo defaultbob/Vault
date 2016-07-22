@@ -67,14 +67,15 @@ class ApiClient:
         response.raise_for_status()
         return response
 
-    def parse_response(self, response):
+    @staticmethod
+    def parse_response(response):
         json = response.json()
 
         respStat = json["responseStatus"]
         if(respStat != "SUCCESS"):
             logging.error("Status was %s" %(respStat))
             logging.debug(json)
-            raise ApiException('request got responseStatus %s' % respStat)
+            raise ApiException('request got responseStatus %s' % respStat + '\n' + str(json))
 
         return json
 
@@ -91,4 +92,4 @@ class ApiClient:
         logging.info("AUTH POST response: " + response.text)            
         response.raise_for_status()
 
-        return response.json()
+        return ApiClient.parse_response(response)

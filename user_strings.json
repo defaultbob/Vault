@@ -1,13 +1,16 @@
 {
     "separator": ":",
     "abbreviation": "Abbreviation",
-    "attribute": "Attribute",
-    "description": "Description",
+    "attribute_header": "Attribute",
+    "allows_header": "Allows",
+    "description_header": "Description",
     "no_docs": "Sorry, no documentation",
     "component": "Component",
     "sub_component": "Sub Component",
     "Docfielddependency_overview": "A document field dependancy record",
     "Docfielddependency_description": "See [Admin documentation](http://vaulthelp2.vod309.com/wordpress/admin-user-help/fields-objects/managing-dependent-fields/) for more details",
     "Docfielddependency.doctype": "Reference to the `DocType`",
-    "Docfielddependency.docfield": "Reference to the `DocField`"
+    "Docfielddependency.docfield": "Reference to the `DocField`",
+    "type": "Type",
+    "required": "Mandatory"
 }
