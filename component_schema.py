@@ -28,12 +28,17 @@ class Component_Attribute(object):
         self.type = str(get_attribute(attribute_definition, "type"))
         self.required = is_required(get_attribute(attribute_definition, "requiredness"))
         self.max_length = int(get_attribute(attribute_definition, "max_length") or -1)
+        self.max_value = int(get_attribute(attribute_definition, "max_value") or -1)
+        self.min_value = int(get_attribute(attribute_definition, "min_value") or -1)
         self.editable = bool(get_attribute(attribute_definition, "editable"))
         self.multi_value = bool(get_attribute( attribute_definition, "multi_value") or False)
         self.ordered = bool(get_attribute(attribute_definition, "ordered") or False)
+        self.enums = get_attribute(attribute_definition, "enums")
 
         if self.type.upper() == 'COMPONENT':
             self.component = str(get_attribute(attribute_definition, "component"))
+        else:
+            self.component = None
 
 # Common Helpers
 

@@ -1,0 +1,21 @@
+{
+    "overview": "",
+    "description": "",
+    "label": "",
+    "active": "",
+    "single_use": "",
+    "outbound_label": "",
+    "inbound_label": "",
+    "inbound_show_docinfo": "",
+    "version_specific_source": "",
+    "version_specific_target": "",
+    "target_doctype": "",
+    "DocRelationshipPropertyFilter": {
+        "overview": "",
+        "description": "",
+        "required": "",
+        "filter_type": "",
+        "filter_field": "",
+        "filter_value": ""
+    }
+}

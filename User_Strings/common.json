@@ -1,0 +1,18 @@
+{
+    "separator": " : ",
+    "abbreviation": "Abbreviation",
+    "attribute_header": "Attribute",
+    "allows_header": "",
+    "description_header": "Description",
+    "no_docs": "Sorry, no documentation",
+    "component": "Component",
+    "sub_component": "Sub Component",
+    "type": "Type",
+    "required": "Mandatory",
+    "multi_value": "Allows multiple values",    
+    "max_length": "Maximum length",    
+    "max_value": "Maximum value",    
+    "min_value": "Minimum value",    
+    "ordered": "Ordered",    
+    "enums": "Allowed values"
+}

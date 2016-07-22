@@ -1,8 +1,8 @@
 import json
 
-def dump_json_file(name, definition, path):
+def dump_json_file(name, definition, path, sort = False):
     with open(path + name + ".json", "w") as f: 
-        json.dump(definition, f, indent=4,sort_keys=False)      
+        json.dump(definition, f, indent=4,sort_keys=sort)      
 
 def dump_json_files(components, path):
     for name, definition in components:
