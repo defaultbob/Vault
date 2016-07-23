@@ -9,6 +9,7 @@ import ast
 import component_schema as cs
 import sys
 import collections
+import copy
 
 def append_line(str_list, line):
     str_list.append(line)
@@ -23,12 +24,6 @@ def to_string(str_list):
 
 def get_common_strings():
     with open('User_Strings/common.json') as data_file:  
-        obj = json.load(data_file)
-    
-    return obj
-
-def get_component_strings(type:cs.Component_Schema):
-    with open('User_Strings/{0}.json'.format(type.name)) as data_file:  
         obj = json.load(data_file)
     
     return obj
@@ -51,28 +46,22 @@ def convert_json_to_markdown(json_definition):
         if response.component:
             component = response.component
             append_line(markdown, "# " + component.name)
-
-            # get component specific words
-            component_words = dict(get_component_strings(component))
             
-            append_line(markdown, component_words['overview'])
+            append_line(markdown, get_string_replacement_tag(component.name, 'overview'))
             append_line(markdown, '')
-            append_line(markdown, component_words['description'])
+            append_line(markdown, get_string_replacement_tag(component.name, 'overview_description'))
 
             append_line(markdown, '')
             append_line(markdown, words["abbreviation"] + words["separator"] + component.abbreviation)
             
             append_line(markdown, '## ' + words['component'])
 
-            component_attribute_markdown = build_attribute_markdown(component, words, component_words)
+            component_attribute_markdown = build_attribute_markdown(component, words)
             append_line(markdown, component_attribute_markdown)
 
-            for sub in component.sub_components:
-                # get sub component specific words
-                sub_component_words = dict(component_words[sub.name])
-            
+            for sub in component.sub_components:            
                 append_line(markdown, '### ' + words['sub_component'] + words["separator"] + sub.name)
-                sub_component_attribute_markdown = build_attribute_markdown(sub, words, sub_component_words)
+                sub_component_attribute_markdown = build_attribute_markdown(sub, words)
                 append_line(markdown, sub_component_attribute_markdown)
 
             return to_string(markdown)
@@ -84,7 +73,7 @@ def convert_json_to_markdown(json_definition):
 
 
 def link_to_component(component:str):
-    return '[`{0}`](http://developer.veevavault.com/docs/mdl/{0}/)'.format(component)
+    return '[`{0}`](../{0}/)'.format(component)
 
 def get_attribute_allows(words, attribute:cs.Component_Attribute):
     cell = []
@@ -135,9 +124,9 @@ def add_column(row, value):
     return row
 
 def header_seperator(columns):
-    return ('|-' * columns) + '|'
+    return ('|:---' * columns) + '|'
 
-def build_attribute_markdown(component, common_words, words):
+def build_attribute_markdown(component, common_words):
     md = []
     append_line(md,'')
 
@@ -154,24 +143,23 @@ def build_attribute_markdown(component, common_words, words):
         attribute_row = ''
         attribute_row = add_column(attribute_row, '`' + attr.name +'`')
         attribute_row = add_column(attribute_row, get_attribute_allows(common_words, attr))
-        attribute_row = add_column(attribute_row, get_attribute(words, attr.name))
+        attribute_row = add_column(attribute_row, get_string_replacement_tag(component.name, attr.name))
         append_line(md, attribute_row)
 
     return ''.join(md)
 
-def dump_files(client, instance_name, components):
+def dump_files(components):
     
-    path = "../output/Markdown/%s/%s/" % (client.domain, instance_name)
-    print("dumping files to: " + path)
+    path = "../output/vault_developer_portal/_posts/mdl/"
+    print('dumping post files to {0}'.format(path))
 
     if not os.path.exists(path):
         os.makedirs(path)
         
     for type,json_definition in components:
         markdown = convert_json_to_markdown(json_definition)
-        Helpers.save_as_file(type, markdown, path, "md")
+        Helpers.save_as_file('{0}-attributes'.format(type), markdown, path, "markdown")
         
-    subprocess.Popen(["open", path])
 
 def default_component_user_strings():
     d = collections.OrderedDict()
@@ -179,7 +167,48 @@ def default_component_user_strings():
     d['description'] = ''
     return d
 
+def get_string_replacement_key(type:str, attribute:str):
+    return '{0}-{1}'.format(type, attribute)
+
+def get_user_string_row(type:str, attribute:str):
+    return '{0}: {1} description'.format(get_string_replacement_key(type, attribute), attribute)
+
+def get_string_filename(type:str):  
+    return '{0}_attr_description'.format(type)
+
+def get_string_replacement_tag(type:str, attribute:str):
+    # {{ site.data.mdl.Docrelationshiptype_attr_description.Docrelationshiptype-label }} {% assign attr = 'Docrelationshiptype-label' %}
+    key = get_string_replacement_key(type, attribute)
+    filename = get_string_filename(type)
+    part1 = "site.data.mdl.{0}.{1}".format(filename, key)
+    part2 = "assign attr = '{0}'".format(key)
+    return "{{ " + part1 + " }} {% " + part2 + " %}"
+
+def append_attribute_user_string_row(user_strings:list, attributes:list, component:str):
+    append_line(user_strings, get_user_string_row(component, "overview")) 
+    append_line(user_strings, get_user_string_row(component, "overview_description")) 
+    
+    for attr in attributes:
+	    append_line(user_strings, get_user_string_row(component, attr.name)) 
+
 def create_user_strings(type:str, path:str ,json_definition):
+        
+    user_strings = []
+    
+    if json_definition:
+        response = cs.Response(json_definition)
+        if response.component:
+            component = response.component
+
+            append_attribute_user_string_row(user_strings, component.attributes, component.name)
+            
+            for sub in component.sub_components:
+                append_attribute_user_string_row(user_strings, sub.attributes, sub.name)
+               
+    file_name = get_string_filename(type)           
+    Helpers.save_as_file(file_name, to_string(user_strings), path, 'yml')
+
+def create_user_strings_json(type:str, path:str ,json_definition):
         
     user_strings = default_component_user_strings()
     
@@ -200,14 +229,13 @@ def create_user_strings(type:str, path:str ,json_definition):
     Helpers.dump_json_file(type, user_strings, path)
 
 def generate_component_string_files(components: list):
-    path = "../output/Markdown/User_Strings/auto/" 
+    path = "../output/vault_developer_portal/_data/mdl/" 
+    print('dumping string files to {0}'.format(path))
     if not os.path.exists(path):
         os.makedirs(path)
         
     for type,json_definition in components:
         user_strings = create_user_strings(type, path, json_definition)
-    
-    subprocess.Popen(["open", path])            
 
 def main():
     print("""
@@ -220,24 +248,16 @@ def main():
 |/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|/_____\|
     """)
     
-    dump = True
-    print_md = False
-    regenerate_component_string_files = False
-
     client = VaultService.get_client()
     instance_name = datetime.datetime.now()
 
     components = mdl.get_component_definitions(client)
+    components2 = copy.deepcopy(components)
 
-    if regenerate_component_string_files:
-        generate_component_string_files(components)
+    dump_files(components)
+    generate_component_string_files(components2)
+    
 
-    if dump:
-        dump_files(client, instance_name, components)
-    elif print_md:
-        for type,json_definition in components:
-            markdown = convert_json_to_markdown(json_definition)
-            print(markdown)
 
 if __name__ == '__main__':
     main()
