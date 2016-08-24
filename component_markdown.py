@@ -10,23 +10,10 @@ import component_schema as cs
 import sys
 import collections
 import copy
-
-def append_line(str_list, line):
-    str_list.append(line)
-    str_list.append('\n')
-
-def append_line_html(str_list, line):
-    str_list.append(line)
-    str_list.append('<br/>')
+import markdown_helpers as mdh
 
 def to_string(str_list):
     return ''.join(str_list)
-
-def get_common_strings():
-    with open('User_Strings/common.json') as data_file:  
-        obj = json.load(data_file)
-    
-    return obj
 
 def get_attribute(dictionary, key):
     if dictionary:
@@ -39,36 +26,36 @@ def get_attribute(dictionary, key):
 def convert_json_to_markdown(json_definition):
 
     markdown = []
-    words = dict(get_common_strings())
+    words = dict(mdh.get_common_strings())
 
     if json_definition:
         response = cs.Response(json_definition)
         if response.component:
             component = response.component
-            append_line(markdown, "# " + component.name)
+            mdh.append_line(markdown, "# " + component.name)
             
-            append_line(markdown, get_string_replacement_tag(component.name, 'overview'))
-            append_line(markdown, '')
-            append_line(markdown, get_string_replacement_tag(component.name, 'overview_description'))
+            mdh.append_line(markdown, get_string_replacement_tag(component.name, 'overview'))
+            mdh.append_line(markdown, '')
+            mdh.append_line(markdown, get_string_replacement_tag(component.name, 'overview_description'))
 
-            append_line(markdown, '')
-            append_line(markdown, words["abbreviation"] + words["separator"] + component.abbreviation)
+            mdh.append_line(markdown, '')
+            mdh.append_line(markdown, words["abbreviation"] + words["separator"] + component.abbreviation)
             
-            append_line(markdown, '## ' + words['component'])
+            mdh.append_line(markdown, '## ' + words['component'])
 
             component_attribute_markdown = build_attribute_markdown(component, words)
-            append_line(markdown, component_attribute_markdown)
+            mdh.append_line(markdown, component_attribute_markdown)
 
             for sub in component.sub_components:            
-                append_line(markdown, '### ' + words['sub_component'] + words["separator"] + sub.name)
+                mdh.append_line(markdown, '### ' + words['sub_component'] + words["separator"] + sub.name)
                 sub_component_attribute_markdown = build_attribute_markdown(sub, words)
-                append_line(markdown, sub_component_attribute_markdown)
+                mdh.append_line(markdown, sub_component_attribute_markdown)
 
             return to_string(markdown)
         else:   
-            append_line(markdown, "# " + response.name)
+            mdh.append_line(markdown, "# " + response.name)
 
-    append_line(markdown, "*" + words["no_docs"] + "*")
+    mdh.append_line(markdown, "*" + words["no_docs"] + "*")
     return to_string(markdown)
 
 
@@ -83,23 +70,23 @@ def get_attribute_allows(words, attribute:cs.Component_Attribute):
     else:
         type = attribute.type
 
-    append_line_html(cell, words["type"] + words["separator"] + type)
+    mdh.append_line_html(cell, words["type"] + words["separator"] + type)
     
     if attribute.required:
-        append_line_html(cell, words["required"])
+        mdh.append_line_html(cell, words["required"])
     
     if attribute.multi_value:
-        append_line_html(cell, words["multi_value"])
+        mdh.append_line_html(cell, words["multi_value"])
     
     if attribute.max_length > -1:
-        append_line_html(cell, words["max_length"] + words["separator"] + str(attribute.max_length))
+        mdh.append_line_html(cell, words["max_length"] + words["separator"] + str(attribute.max_length))
     if attribute.max_value > -1:
-        append_line_html(cell, words["max_value"] + words["separator"] + str(attribute.max_value))
+        mdh.append_line_html(cell, words["max_value"] + words["separator"] + str(attribute.max_value))
     if attribute.min_value > -1:
-        append_line_html(cell, words["min_value"] + words["separator"] + str(attribute.min_value))
+        mdh.append_line_html(cell, words["min_value"] + words["separator"] + str(attribute.min_value))
         
     if attribute.ordered:
-        append_line_html(cell, words["ordered"] + words["separator"] + str(True))
+        mdh.append_line_html(cell, words["ordered"] + words["separator"] + str(True))
 
     if attribute.type == 'Enum' and attribute.enums:
         # no need to append_line_html because of <ul>
@@ -115,36 +102,27 @@ def get_attribute_allows(words, attribute:cs.Component_Attribute):
         cell_str = cell_str[:-5]
     return cell_str
 
-def add_column(row, value):
-    # if first column
-    if row == '':
-        row = '|'
 
-    row = row + str(value) + '|'
-    return row
-
-def header_seperator(columns):
-    return ('|:---' * columns) + '|'
 
 def build_attribute_markdown(component, common_words):
     md = []
-    append_line(md,'')
+    mdh.append_line(md,'')
 
     # | Attribute | Allows | Description | 
     header_row = '' 
-    header_row = add_column(header_row, common_words['attribute_header'])
-    header_row = add_column(header_row, common_words['allows_header'])
-    header_row = add_column(header_row, common_words['description_header'])
-    append_line(md, header_row)
+    header_row = mdh.add_column(header_row, common_words['attribute_header'])
+    header_row = mdh.add_column(header_row, common_words['allows_header'])
+    header_row = mdh.add_column(header_row, common_words['description_header'])
+    mdh.append_line(md, header_row)
     
-    append_line(md, header_seperator(3))
+    mdh.append_line(md, mdh.header_seperator(3))
     
     for attr in component.attributes:       
         attribute_row = ''
-        attribute_row = add_column(attribute_row, '`' + attr.name +'`')
-        attribute_row = add_column(attribute_row, get_attribute_allows(common_words, attr))
-        attribute_row = add_column(attribute_row, get_string_replacement_tag(component.name, attr.name))
-        append_line(md, attribute_row)
+        attribute_row = mdh.add_column(attribute_row, '`' + attr.name +'`')
+        attribute_row = mdh.add_column(attribute_row, get_attribute_allows(common_words, attr))
+        attribute_row = mdh.add_column(attribute_row, get_string_replacement_tag(component.name, attr.name))
+        mdh.append_line(md, attribute_row)
 
     return ''.join(md)
 
@@ -185,11 +163,11 @@ def get_string_replacement_tag(type:str, attribute:str):
     return "{{ " + part1 + " }} {% " + part2 + " %}"
 
 def append_attribute_user_string_row(user_strings:list, attributes:list, component:str):
-    append_line(user_strings, get_user_string_row(component, "overview")) 
-    append_line(user_strings, get_user_string_row(component, "overview_description")) 
+    mdh.append_line(user_strings, get_user_string_row(component, "overview")) 
+    mdh.append_line(user_strings, get_user_string_row(component, "overview_description")) 
     
     for attr in attributes:
-	    append_line(user_strings, get_user_string_row(component, attr.name)) 
+	    mdh.append_line(user_strings, get_user_string_row(component, attr.name)) 
 
 def create_user_strings(type:str, path:str ,json_definition):
         

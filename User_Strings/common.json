@@ -8,11 +8,16 @@
     "component": "Component",
     "sub_component": "Sub Component",
     "type": "Type",
-    "required": "Mandatory",
-    "multi_value": "Allows multiple values",    
-    "max_length": "Maximum length",    
-    "max_value": "Maximum value",    
-    "min_value": "Minimum value",    
-    "ordered": "Ordered",    
-    "enums": "Allowed values"
+    "required": "Required",
+    "multi_value": "Allows multiple values",
+    "max_length": "Maximum length",
+    "max_value": "Maximum value",
+    "min_value": "Minimum value",
+    "ordered": "Ordered",
+    "enums": "Allowed values",
+    "error_code_header": "Code",
+    "error_type_header": "Type",
+    "error_examples_header": "Examples",
+    "error_message_header": "Message",
+    "error_no_errors": "No component-specific errors are defined by this component."
 }

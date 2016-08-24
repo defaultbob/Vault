@@ -26,9 +26,12 @@ def output_components(path, client):
     for component_json in comps:
         component_type = component_json["type"]
         type_folder = (path + "/%s") % (component_type) 
-
-        os.makedirs(type_folder)
+                   
         for component_name in component_json["names"]:
+            
+            if not os.path.exists(type_folder):
+                os.makedirs(type_folder)
+
             name = component_type + "." + component_name
             with open(type_folder + "/" + component_name + ".mdl", "w") as f:
                 mdl = VaultService.get_component(

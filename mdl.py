@@ -2,7 +2,6 @@ import re
 import VaultService
 import ApiClient
 
-
 def parse_mdl(mdl_str):
     mdl = str(mdl_str)
     statements = mdl.split(";")
@@ -82,9 +81,8 @@ def print_component(lst, depth):
         else:
             print("\t"*(depth) + a + "."+ v)
 
-def get_component_type_names(client):
-    resource = "metadata/components"
-    component_types_json = VaultService.get_component_types(client)
+def get_component_type_names(client, from_cache = False):
+    component_types_json = VaultService.get_component_types(client, from_cache)
 
     component_type_names = []
     for item in component_types_json:
