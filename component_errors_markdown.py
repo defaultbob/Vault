@@ -77,7 +77,7 @@ def create_markdown_file(file_name, client, error_url,  generic_only=False):
                 item.add_example(code)
                 generic_errors[code_num] = item
     
-    Helpers.save_as_file(file_name, build_markdown(generic_errors), '../vault_developer_portal/_posts/mdl/', 'markdown')
+    Helpers.save_as_file(file_name, build_markdown(generic_errors), '../output/vault_developer_portal/_posts/mdl/', 'markdown')
 
 def main():
     print("""
