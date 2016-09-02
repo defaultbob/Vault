@@ -30,37 +30,27 @@ def convert_json_to_markdown(json_definition):
 
     if json_definition:
         response = cs.Response(json_definition)
+        
+        mdh.append_line(markdown, '## ' + words['component'])
         if response.component:
             component = response.component
-            mdh.append_line(markdown, "# " + component.name)
-            
-            mdh.append_line(markdown, get_string_replacement_tag(component.name, 'overview'))
-            mdh.append_line(markdown, '')
-            mdh.append_line(markdown, get_string_replacement_tag(component.name, 'overview_description'))
 
-            mdh.append_line(markdown, '')
-            mdh.append_line(markdown, words["abbreviation"] + words["separator"] + component.abbreviation)
-            
-            mdh.append_line(markdown, '## ' + words['component'])
-
-            component_attribute_markdown = build_attribute_markdown(component, words)
+            component_attribute_markdown = build_attribute_markdown(component, words, component.name)
             mdh.append_line(markdown, component_attribute_markdown)
 
             for sub in component.sub_components:            
                 mdh.append_line(markdown, '### ' + words['sub_component'] + words["separator"] + sub.name)
-                sub_component_attribute_markdown = build_attribute_markdown(sub, words)
+                sub_component_attribute_markdown = build_attribute_markdown(sub, words, component.name)
                 mdh.append_line(markdown, sub_component_attribute_markdown)
 
             return to_string(markdown)
-        else:   
-            mdh.append_line(markdown, "# " + response.name)
 
     mdh.append_line(markdown, "*" + words["no_docs"] + "*")
     return to_string(markdown)
 
 
 def link_to_component(component:str):
-    return '[`{0}`](../{0}/)'.format(component)
+    return '`{0}`'.format(component)
 
 def get_attribute_allows(words, attribute:cs.Component_Attribute):
     cell = []
@@ -104,7 +94,7 @@ def get_attribute_allows(words, attribute:cs.Component_Attribute):
 
 
 
-def build_attribute_markdown(component, common_words):
+def build_attribute_markdown(component, common_words, string_file):
     md = []
     mdh.append_line(md,'')
 
@@ -121,7 +111,7 @@ def build_attribute_markdown(component, common_words):
         attribute_row = ''
         attribute_row = mdh.add_column(attribute_row, '`' + attr.name +'`')
         attribute_row = mdh.add_column(attribute_row, get_attribute_allows(common_words, attr))
-        attribute_row = mdh.add_column(attribute_row, get_string_replacement_tag(component.name, attr.name))
+        attribute_row = mdh.add_column(attribute_row, get_string_replacement_tag(component.name, attr.name, string_file))
         mdh.append_line(md, attribute_row)
 
     return ''.join(md)
@@ -149,22 +139,20 @@ def get_string_replacement_key(type:str, attribute:str):
     return '{0}-{1}'.format(type, attribute)
 
 def get_user_string_row(type:str, attribute:str):
-    return '{0}: {1} description'.format(get_string_replacement_key(type, attribute), attribute)
+    return '{0}: '.format(get_string_replacement_key(type, attribute))
 
 def get_string_filename(type:str):  
     return '{0}_attr_description'.format(type)
 
-def get_string_replacement_tag(type:str, attribute:str):
+def get_string_replacement_tag(type:str, attribute:str, file:str):
     # {{ site.data.mdl.Docrelationshiptype_attr_description.Docrelationshiptype-label }} {% assign attr = 'Docrelationshiptype-label' %}
     key = get_string_replacement_key(type, attribute)
-    filename = get_string_filename(type)
+    filename = get_string_filename(file)
     part1 = "site.data.mdl.{0}.{1}".format(filename, key)
     part2 = "assign attr = '{0}'".format(key)
     return "{{ " + part1 + " }} {% " + part2 + " %}"
 
 def append_attribute_user_string_row(user_strings:list, attributes:list, component:str):
-    mdh.append_line(user_strings, get_user_string_row(component, "overview")) 
-    mdh.append_line(user_strings, get_user_string_row(component, "overview_description")) 
     
     for attr in attributes:
 	    mdh.append_line(user_strings, get_user_string_row(component, attr.name)) 
@@ -172,6 +160,9 @@ def append_attribute_user_string_row(user_strings:list, attributes:list, compone
 def create_user_strings(type:str, path:str ,json_definition):
         
     user_strings = []
+    
+    mdh.append_line(user_strings, get_user_string_row(type, "overview")) 
+    mdh.append_line(user_strings, get_user_string_row(type, "overview_description")) 
     
     if json_definition:
         response = cs.Response(json_definition)
@@ -215,6 +206,55 @@ def generate_component_string_files(components: list):
     for type,json_definition in components:
         user_strings = create_user_strings(type, path, json_definition)
 
+def generate_component_pages(components: list):
+    path = "../output/vault_developer_portal/_posts/mdl/" 
+    print('dumping pages {0}'.format(path))
+    if not os.path.exists(path):
+        os.makedirs(path)
+        
+    for type,json_definition in components:
+        create_component_page(type, path)
+
+def create_component_page(type:str, path:str):
+        
+    md = []    
+        
+    mdh.append_line(md,'---')
+    mdh.append_line(md,'layout: devsite')
+    mdh.append_line(md,'title: \"{0}\"'.format(type))
+    mdh.append_line(md,'date:   2016-08-31 00:00:00')
+    mdh.append_line(md,'categories: docs mdl')
+    mdh.append_line(md,'group: \"mdldoc\"')
+    mdh.append_line(md,'---')
+    mdh.append_line(md,'')
+
+    mdh.append_line(md,'# {0}'.format(type))
+    mdh.append_line(md,'')
+            
+    mdh.append_line(md, get_string_replacement_tag(type, 'overview', type))
+    mdh.append_line(md, '')
+
+    mdh.append_line(md, get_string_replacement_tag(type, 'overview_description', type))
+    mdh.append_line(md, '')
+
+    # mdh.append_line(md,'- [Component Attributes](#component)')
+    # mdh.append_line(md,'- [Component Errors](#component-errors)')
+    # mdh.append_line(md,'')
+
+    mdh.append_line(md,'{{% include_relative {0}-attributes.markdown %}} '.format(type))
+    mdh.append_line(md,'')
+    
+    mdh.append_line(md,'## Component Errors')
+    mdh.append_line(md,'The MDL can raise errors while executing commands on the components for many reasons. The errors which are common to all component are defined in the [Common Errors]({% post_url 2014-12-23-common %}). The following errors (if any) are specific to this component type.')
+    mdh.append_line(md,'')
+
+    mdh.append_line(md,'{{% include_relative {0}-errors.markdown %}}'.format(type))  
+    mdh.append_line(md,'')     
+        
+    mdh.append_line(md, mdh.get_comment('Auto-generated at ' + str(datetime.datetime.now())))
+
+    Helpers.save_as_file('2016-08-31-' + type, ''.join(md), path, 'markdown')
+
 def main():
     print("""
  _______ _______ _______ _______ _______ _______ _______ _______ 
@@ -231,11 +271,11 @@ def main():
 
     components = mdl.get_component_definitions(client)
     components2 = copy.deepcopy(components)
+    components3 = copy.deepcopy(components)
 
     dump_files(components)
     generate_component_string_files(components2)
-    
-
+    generate_component_pages(components3)
 
 if __name__ == '__main__':
     main()
