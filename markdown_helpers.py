@@ -1,14 +1,6 @@
 import json
 import sys
 
-def append_line(str_list, line):
-    str_list.append(line)
-    str_list.append('\n')
-
-def append_line_html(str_list, line):
-    str_list.append(line)
-    str_list.append('<br/>')
-
 def add_column(row, value):
     # if first column
     if row == '':

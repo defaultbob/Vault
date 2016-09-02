@@ -1,5 +1,13 @@
 import json
 
+def append_line(str_list, line):
+    str_list.append(line)
+    str_list.append('\n')
+
+def append_line_html(str_list, line):
+    str_list.append(line)
+    str_list.append('<br/>')
+
 def dump_json_file(name, definition, path, sort = False):
     with open(path + name + ".json", "w") as f: 
         json.dump(definition, f, indent=4,sort_keys=sort)      
