@@ -20,6 +20,7 @@ class Component_Schema(object):
 class Sub_Component(object):
     def __init__(self, json_definition):
         self.name = json_definition["name"]
+        self.json_name = json_definition["json_collection_name"]
         self.attributes = build_attributes(json_definition)
 
 class Component_Attribute(object):

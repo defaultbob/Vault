@@ -113,6 +113,23 @@ def get_component_definitions(client):
         
     return zip(names, definitions)
 
+def get_vcf_type_names(client):
+    component_types_json = VaultService.get_vcf_types(client)
+
+    component_type_names = []
+    for item in component_types_json:
+        component_type_names.append(item["name"])
+
+    return component_type_names
+
+def get_vcf_definitions(client):
+    names = get_vcf_type_names(client)
+    definitions = []
+    for name in names:
+        definitions.append(get_component_definition(name, client))
+        
+    return zip(names, definitions)
+
 def main():
     statements = parse_mdl("""
     RECREATE Docfield annotations_all__v (

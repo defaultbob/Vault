@@ -54,7 +54,7 @@ class ApiClient:
         return self.parse_response(response)    
 
     def url_resource(self, resource):
-        url = "https://%s/api/v%s.0/%s" % (self.domain, self.version, resource)
+        url = "https://%s/api/v%s/%s" % (self.domain, self.version, resource)
         return url   
     
     def get_mdl_json(self, resource):
@@ -82,7 +82,7 @@ class ApiClient:
     @staticmethod
     def auth(domain, user, password, version):
         """Authenticate to Vault API"""
-        url = "https://%s/api/v%s.0/auth" % (domain, version)
+        url = "https://%s/api/v%s/auth" % (domain, version)
 
         querystring = {"username": user, "password": password}
 

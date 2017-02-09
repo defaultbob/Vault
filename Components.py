@@ -8,8 +8,9 @@ import printProgress
 import VaultService
 import mdl
 import sys
+import Helpers
 
-def output_components(path, client):
+def output_components(path, client, includeWorkflow):
 
     comps = VaultService.get_component_types(client)
 
@@ -33,10 +34,15 @@ def output_components(path, client):
                 os.makedirs(type_folder)
 
             name = component_type + "." + component_name
-            with open(type_folder + "/" + component_name + ".mdl", "w") as f:
-                mdl = VaultService.get_component(
-                    client, name)
-                f.write(mdl.encode('utf-8'))
+            if includeWorkflow and component_type == "Workflow":
+                wf = VaultService.get_workflow(client, component_name)
+                Helpers.dump_json_file(component_name, wf, type_folder + "/")
+            else:
+                with open(type_folder + "/" + component_name + ".mdl", "w") as f:
+                    mdl = VaultService.get_component(
+                        client, name)
+                    f.write(mdl.encode('utf-8'))
+            
             i += 1
             printProgress.printProgress(
                 i, l, prefix='Progress:', suffix='Complete' + " - " + name, barLength=50)
@@ -55,8 +61,9 @@ def main():
     client = VaultService.get_client()
     instance_name = datetime.datetime.now()
     path = "../output/MDL API/%s/%s" % (client.domain, instance_name)
-        
-    output_components(path, client)
+
+    includeWorkflow = True 
+    output_components(path, client, includeWorkflow)
     print "Done"
 
 if __name__ == '__main__':

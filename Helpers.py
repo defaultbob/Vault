@@ -20,6 +20,10 @@ def save_as_file(name, content, path, extension):
     with open(path + name + "." + extension, "w") as f: 
         f.write(content)
 
+def append_to_file(name, content, path, extension):
+    with open(path + name + "." + extension, "a") as f: 
+        f.write(content)        
+
 def is_json(myjson):
     try:
         json_object = json.loads(myjson)

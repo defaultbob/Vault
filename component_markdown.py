@@ -31,21 +31,21 @@ def convert_json_to_markdown(json_definition):
     if json_definition:
         response = cs.Response(json_definition)
         
-        mdh.append_line(markdown, '## ' + words['component'])
+        Helpers.append_line(markdown, '## ' + words['component'])
         if response.component:
             component = response.component
 
             component_attribute_markdown = build_attribute_markdown(component, words, component.name)
-            mdh.append_line(markdown, component_attribute_markdown)
+            Helpers.append_line(markdown, component_attribute_markdown)
 
             for sub in component.sub_components:            
-                mdh.append_line(markdown, '### ' + words['sub_component'] + words["separator"] + sub.name)
+                Helpers.append_line(markdown, '### ' + words['sub_component'] + words["separator"] + sub.name)
                 sub_component_attribute_markdown = build_attribute_markdown(sub, words, component.name)
-                mdh.append_line(markdown, sub_component_attribute_markdown)
+                Helpers.append_line(markdown, sub_component_attribute_markdown)
 
             return to_string(markdown)
 
-    mdh.append_line(markdown, "*" + words["no_docs"] + "*")
+    Helpers.append_line(markdown, "*" + words["no_docs"] + "*")
     return to_string(markdown)
 
 
@@ -60,23 +60,23 @@ def get_attribute_allows(words, attribute:cs.Component_Attribute):
     else:
         type = attribute.type
 
-    mdh.append_line_html(cell, words["type"] + words["separator"] + type)
+    Helpers.append_line_html(cell, words["type"] + words["separator"] + type)
     
     if attribute.required:
-        mdh.append_line_html(cell, words["required"])
+        Helpers.append_line_html(cell, words["required"])
     
     if attribute.multi_value:
-        mdh.append_line_html(cell, words["multi_value"])
+        Helpers.append_line_html(cell, words["multi_value"])
     
     if attribute.max_length > -1:
-        mdh.append_line_html(cell, words["max_length"] + words["separator"] + str(attribute.max_length))
+        Helpers.append_line_html(cell, words["max_length"] + words["separator"] + str(attribute.max_length))
     if attribute.max_value > -1:
-        mdh.append_line_html(cell, words["max_value"] + words["separator"] + str(attribute.max_value))
+        Helpers.append_line_html(cell, words["max_value"] + words["separator"] + str(attribute.max_value))
     if attribute.min_value > -1:
-        mdh.append_line_html(cell, words["min_value"] + words["separator"] + str(attribute.min_value))
+        Helpers.append_line_html(cell, words["min_value"] + words["separator"] + str(attribute.min_value))
         
     if attribute.ordered:
-        mdh.append_line_html(cell, words["ordered"] + words["separator"] + str(True))
+        Helpers.append_line_html(cell, words["ordered"] + words["separator"] + str(True))
 
     if attribute.type == 'Enum' and attribute.enums:
         # no need to append_line_html because of <ul>
@@ -96,23 +96,23 @@ def get_attribute_allows(words, attribute:cs.Component_Attribute):
 
 def build_attribute_markdown(component, common_words, string_file):
     md = []
-    mdh.append_line(md,'')
+    Helpers.append_line(md,'')
 
     # | Attribute | Allows | Description | 
     header_row = '' 
     header_row = mdh.add_column(header_row, common_words['attribute_header'])
     header_row = mdh.add_column(header_row, common_words['allows_header'])
     header_row = mdh.add_column(header_row, common_words['description_header'])
-    mdh.append_line(md, header_row)
+    Helpers.append_line(md, header_row)
     
-    mdh.append_line(md, mdh.header_seperator(3))
+    Helpers.append_line(md, mdh.header_seperator(3))
     
     for attr in component.attributes:       
         attribute_row = ''
         attribute_row = mdh.add_column(attribute_row, '`' + attr.name +'`')
         attribute_row = mdh.add_column(attribute_row, get_attribute_allows(common_words, attr))
         attribute_row = mdh.add_column(attribute_row, get_string_replacement_tag(component.name, attr.name, string_file))
-        mdh.append_line(md, attribute_row)
+        Helpers.append_line(md, attribute_row)
 
     return ''.join(md)
 
@@ -155,14 +155,14 @@ def get_string_replacement_tag(type:str, attribute:str, file:str):
 def append_attribute_user_string_row(user_strings:list, attributes:list, component:str):
     
     for attr in attributes:
-	    mdh.append_line(user_strings, get_user_string_row(component, attr.name)) 
+	    Helpers.append_line(user_strings, get_user_string_row(component, attr.name)) 
 
 def create_user_strings(type:str, path:str ,json_definition):
         
     user_strings = []
     
-    mdh.append_line(user_strings, get_user_string_row(type, "overview")) 
-    mdh.append_line(user_strings, get_user_string_row(type, "overview_description")) 
+    Helpers.append_line(user_strings, get_user_string_row(type, "overview")) 
+    Helpers.append_line(user_strings, get_user_string_row(type, "overview_description")) 
     
     if json_definition:
         response = cs.Response(json_definition)
@@ -219,39 +219,39 @@ def create_component_page(type:str, path:str):
         
     md = []    
         
-    mdh.append_line(md,'---')
-    mdh.append_line(md,'layout: devsite')
-    mdh.append_line(md,'title: \"{0}\"'.format(type))
-    mdh.append_line(md,'date:   2016-08-31 00:00:00')
-    mdh.append_line(md,'categories: docs mdl')
-    mdh.append_line(md,'group: \"mdldoc\"')
-    mdh.append_line(md,'---')
-    mdh.append_line(md,'')
+    Helpers.append_line(md,'---')
+    Helpers.append_line(md,'layout: devsite')
+    Helpers.append_line(md,'title: \"{0}\"'.format(type))
+    Helpers.append_line(md,'date:   2016-08-31 00:00:00')
+    Helpers.append_line(md,'categories: docs mdl')
+    Helpers.append_line(md,'group: \"mdldoc\"')
+    Helpers.append_line(md,'---')
+    Helpers.append_line(md,'')
 
-    mdh.append_line(md,'# {0}'.format(type))
-    mdh.append_line(md,'')
+    Helpers.append_line(md,'# {0}'.format(type))
+    Helpers.append_line(md,'')
             
-    mdh.append_line(md, get_string_replacement_tag(type, 'overview', type))
-    mdh.append_line(md, '')
+    Helpers.append_line(md, get_string_replacement_tag(type, 'overview', type))
+    Helpers.append_line(md, '')
 
-    mdh.append_line(md, get_string_replacement_tag(type, 'overview_description', type))
-    mdh.append_line(md, '')
+    Helpers.append_line(md, get_string_replacement_tag(type, 'overview_description', type))
+    Helpers.append_line(md, '')
 
-    # mdh.append_line(md,'- [Component Attributes](#component)')
-    # mdh.append_line(md,'- [Component Errors](#component-errors)')
-    # mdh.append_line(md,'')
+    # Helpers.append_line(md,'- [Component Attributes](#component)')
+    # Helpers.append_line(md,'- [Component Errors](#component-errors)')
+    # Helpers.append_line(md,'')
 
-    mdh.append_line(md,'{{% include_relative {0}-attributes.markdown %}} '.format(type))
-    mdh.append_line(md,'')
+    Helpers.append_line(md,'{{% include_relative {0}-attributes.markdown %}} '.format(type))
+    Helpers.append_line(md,'')
     
-    mdh.append_line(md,'## Component Errors')
-    mdh.append_line(md,'The MDL can raise errors while executing commands on the components for many reasons. The errors which are common to all component are defined in the [Common Errors]({% post_url 2014-12-23-common %}). The following errors (if any) are specific to this component type.')
-    mdh.append_line(md,'')
+    Helpers.append_line(md,'## Component Errors')
+    Helpers.append_line(md,'The MDL can raise errors while executing commands on the components for many reasons. The errors which are common to all component are defined in the [Common Errors]({% post_url 2014-12-23-common %}). The following errors (if any) are specific to this component type.')
+    Helpers.append_line(md,'')
 
-    mdh.append_line(md,'{{% include_relative {0}-errors.markdown %}}'.format(type))  
-    mdh.append_line(md,'')     
+    Helpers.append_line(md,'{{% include_relative {0}-errors.markdown %}}'.format(type))  
+    Helpers.append_line(md,'')     
         
-    mdh.append_line(md, mdh.get_comment('Auto-generated at ' + str(datetime.datetime.now())))
+    Helpers.append_line(md, mdh.get_comment('Auto-generated at ' + str(datetime.datetime.now())))
 
     Helpers.save_as_file('2016-08-31-' + type, ''.join(md), path, 'markdown')
 

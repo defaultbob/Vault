@@ -10,7 +10,7 @@ Subcomponent names
     """)
     
     csv = []
-    Helpers.append_line(csv, 'Component,Sub component')
+    Helpers.append_line(csv, 'Component,Sub component, json name')
 
     client = VaultService.get_client()
     instance_name = datetime.datetime.now()
@@ -20,7 +20,7 @@ Subcomponent names
         response = cs.Response(json_definition)
         if(response.component):        
             for sub in response.component.sub_components:
-                Helpers.append_line(csv, '{0},{1}'.format(type, sub.name))
+                Helpers.append_line(csv, '{0},{1},{2}'.format(type, sub.name, sub.json_name))
 
         # client.get_json('/api/{{version}}/configuration/Doclifecycle.claim__c')
     
