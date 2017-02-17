@@ -4,6 +4,7 @@ import os
 import ApiClient
 import printProgress
 import VaultService
+import Helpers
 
 def output_components(path, client):
     i = 0
@@ -15,11 +16,16 @@ def output_components(path, client):
     printProgress.printProgress(
         i, l, prefix='Progress:', suffix='Complete', barLength=50)
 
+    csv = []
+    Helpers.append_line(csv, 'Component Type,Name,Checksum')
+
     for component in directory["data"]:
         name = component["component_name__v"]
         type = component["component_type__v"]
         checksum = component["checksum__v"]
         mdl = component["mdl_definition__v"]
+
+        Helpers.append_line(csv, '{0},{1},{2}'.format(type, type+"."+name, checksum))
 
         type_folder = (path + "/%s") % (type)
         if not os.path.exists(type_folder):
@@ -31,7 +37,7 @@ def output_components(path, client):
             printProgress.printProgress(
                 i, l, prefix='Progress:', suffix='Complete' + " - " + name, barLength=50)
             
-
+    return csv
 
 def main():
     print """
@@ -47,7 +53,8 @@ def main():
     instance_name = datetime.datetime.now()
     path = "../output/VQL/%s/%s" % (client.domain, instance_name)
 
-    output_components(path, client)
+    csv = output_components(path, client)
+    Helpers.save_as_file('{0}_{1}'.format(client.domain, instance_name),''.join(csv), path,'csv')
 
     print "Done"
 
