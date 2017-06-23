@@ -78,7 +78,7 @@ offset = 0
 i = 1
 
 while size == limit:
-    directory = client.get_json("query/components?q=SELECT component_name__v, checksum__v, component_type__v, json_definition__v, mdl_definition__v FROM vault_component__v LIMIT %s OFFSET %s" % (limit, offset));
+    directory = client.get_json("query/components?q=SELECT component_name__v, checksum__v, component_type__v, LONGTEXT(json_definition__v), mdl_definition__v FROM vault_component__v LIMIT %s OFFSET %s" % (limit, offset));
     limit = directory["responseDetails"]["limit"]
     size = directory["responseDetails"]["size"]
     offset += limit

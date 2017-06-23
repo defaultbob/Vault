@@ -10,10 +10,10 @@ import mdl
 import sys
 import Helpers
 
-def output_components(path, client, includeWorkflow):
+def output_components(path, client, includeWorkflow, filter):
 
     comps = VaultService.get_component_types(client)
-
+    
     i = 0
     l = 0
 
@@ -27,7 +27,11 @@ def output_components(path, client, includeWorkflow):
     for component_json in comps:
         component_type = component_json["type"]
         type_folder = (path + "/%s") % (component_type) 
-                   
+
+        # print filter
+        if filter != "" and component_type == filter: 
+            break
+
         for component_name in component_json["names"]:
             
             if not os.path.exists(type_folder):
@@ -48,7 +52,7 @@ def output_components(path, client, includeWorkflow):
                 i, l, prefix='Progress:', suffix='Complete' + " - " + name, barLength=50)
         
 def main():
-                  
+              
     print """
      ______                                             __      
     / ____/___  ____ ___  ____  ____  ____  ___  ____  / /______
@@ -57,13 +61,13 @@ def main():
     \____/\____/_/ /_/ /_/ .___/\____/_/ /_/\___/_/ /_/\__/____/  
                                                                                     
     """
-
+    filter = "Atomicsecurity"
     client = VaultService.get_client()
     instance_name = datetime.datetime.now()
     path = "../output/MDL API/%s/%s" % (client.domain, instance_name)
 
-    includeWorkflow = True 
-    output_components(path, client, includeWorkflow)
+    includeWorkflow = False #True 
+    output_components(path, client, includeWorkflow, filter)
     print "Done"
 
 if __name__ == '__main__':

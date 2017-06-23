@@ -30,7 +30,7 @@ def get_component_types(client, from_cache = False):
     else:        
         data = client.get_mdl_json("components")
         Helpers.dump_json_file("component_types", data, cache_path, 'json')
-
+    
     return data["components"]
 
 def get_component(client, component):

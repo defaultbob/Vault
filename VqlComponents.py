@@ -10,7 +10,7 @@ def output_components(path, client):
     i = 0
     l = 0
 
-    directory = client.get_json("query/components?q=SELECT component_name__v, checksum__v, component_type__v, mdl_definition__v FROM vault_component__v ORDER BY component_type__v");
+    directory = client.get_json("query/components?q=SELECT component_name__v, checksum__v, component_type__v, mdl_definition__v, json_definition__v FROM vault_component__v WHERE status__v='active__v' ORDER BY component_type__v");
 
     l = directory["responseDetails"]["size"]
     printProgress.printProgress(
@@ -24,6 +24,7 @@ def output_components(path, client):
         type = component["component_type__v"]
         checksum = component["checksum__v"]
         mdl = component["mdl_definition__v"]
+        json_def = component["json_definition__v"]
 
         Helpers.append_line(csv, '{0},{1},{2}'.format(type, type+"."+name, checksum))
 
@@ -31,7 +32,17 @@ def output_components(path, client):
         if not os.path.exists(type_folder):
             os.makedirs(type_folder)
         
-        with open(type_folder + "/" + name + ".mdl", "w") as f:
+        json_folder = (type_folder + "/json/")
+        if not os.path.exists(json_folder):
+            os.makedirs(json_folder)
+
+        mdl_folder = (type_folder + "/mdl")
+        if not os.path.exists(mdl_folder):
+            os.makedirs(mdl_folder)
+
+        Helpers.dump_json_file(name, json_def, json_folder)
+        
+        with open(mdl_folder + "/" + name + ".mdl", "w") as f:
             f.write(mdl.encode('utf-8'))
             i += 1
             printProgress.printProgress(
