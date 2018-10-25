@@ -25,7 +25,7 @@ class ApiClient:
         
     def get_json(self, resource):
         response = self.get(resource)
-        return self.parse_response(response)
+        return self.parse_response(response, resource)
 
     def get_json_obj(self, resource):
         json_str = self.get_json(resource)
@@ -51,7 +51,15 @@ class ApiClient:
         response = self.s.request("POST",url, data=payload, headers=headers)
         logging.info("POST response: " + response.text)
         response.raise_for_status()
-        return self.parse_response(response)    
+        return self.parse_response(response, resource)    
+
+    def delete(self, resource):
+        url = self.url_resource(resource)
+        logging.info("DELETE" + resource)
+        response = self.s.request("DELETE",url)
+        logging.info("DELETE response: " + response.text)
+        response.raise_for_status()
+        return self.parse_response(response, resource)    
 
     def url_resource(self, resource):
         url = "https://%s/api/v%s/%s" % (self.domain, self.version, resource)
@@ -59,7 +67,7 @@ class ApiClient:
     
     def get_mdl_json(self, resource):
         response = self.get_mdl(resource)
-        return self.parse_response(response)
+        return self.parse_response(response, resource)
 
     def get_mdl(self, resource):
         url = "https://%s/api/mdl/%s" % (self.domain, resource)
@@ -68,12 +76,12 @@ class ApiClient:
         return response
 
     @staticmethod
-    def parse_response(response):
+    def parse_response(response, resource):
         json = response.json()
 
         respStat = json["responseStatus"]
         if(respStat != "SUCCESS"):
-            logging.error("Status was %s" %(respStat))
+            logging.error("Status: %s for %s" %(respStat, resource))
             logging.debug(json)
             raise ApiException('request got responseStatus %s' % respStat + '\n' + str(json))
 
@@ -92,4 +100,4 @@ class ApiClient:
         logging.info("AUTH POST response: " + response.text)            
         response.raise_for_status()
 
-        return ApiClient.parse_response(response)
+        return ApiClient.parse_response(response, url)

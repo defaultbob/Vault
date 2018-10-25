@@ -31,7 +31,7 @@ def convert_json_to_markdown(json_definition):
     if json_definition:
         response = cs.Response(json_definition)
         
-        Helpers.append_line(markdown, '## ' + words['component'])
+        #Helpers.append_line(markdown, '## ' + words['component'])
         if response.component:
             component = response.component
 
@@ -39,7 +39,7 @@ def convert_json_to_markdown(json_definition):
             Helpers.append_line(markdown, component_attribute_markdown)
 
             for sub in component.sub_components:            
-                Helpers.append_line(markdown, '### ' + words['sub_component'] + words["separator"] + sub.name)
+                Helpers.append_line(markdown, '### ' + sub.name)
                 sub_component_attribute_markdown = build_attribute_markdown(sub, words, component.name)
                 Helpers.append_line(markdown, sub_component_attribute_markdown)
 
@@ -68,9 +68,9 @@ def get_attribute_allows(words, attribute:cs.Component_Attribute):
     if attribute.multi_value:
         Helpers.append_line_html(cell, words["multi_value"])
     
-    if attribute.max_length > -1:
+    if attribute.max_length > -1 and attribute.max_length < 2147483647:
         Helpers.append_line_html(cell, words["max_length"] + words["separator"] + str(attribute.max_length))
-    if attribute.max_value > -1:
+    if attribute.max_value > -1 and attribute.max_value < 2147483647:
         Helpers.append_line_html(cell, words["max_value"] + words["separator"] + str(attribute.max_value))
     if attribute.min_value > -1:
         Helpers.append_line_html(cell, words["min_value"] + words["separator"] + str(attribute.min_value))
@@ -83,7 +83,7 @@ def get_attribute_allows(words, attribute:cs.Component_Attribute):
         cell.append(words["enums"] + words["separator"])
         enums_str = '<ul>'
         for enum in attribute.enums:
-            enums_str += '<li>{0}</li>'.format(str(enum))
+            enums_str += '<li>{0}</li>'.format(str(enum).replace('_','\_'))
         enums_str += '</ul>'
         cell.append(enums_str)
 
@@ -116,9 +116,10 @@ def build_attribute_markdown(component, common_words, string_file):
 
     return ''.join(md)
 
+#components (source/mdl/components). These are called as partials
 def dump_files(components):
     
-    path = "../output/vault_developer_portal/_posts/mdl/"
+    path = "output/components/"
     print('dumping post files to {0}'.format(path))
 
     if not os.path.exists(path):
@@ -126,7 +127,7 @@ def dump_files(components):
         
     for type,json_definition in components:
         markdown = convert_json_to_markdown(json_definition)
-        Helpers.save_as_file('{0}-attributes'.format(type), markdown, path, "markdown")
+        Helpers.save_as_file('_{0}-attributes'.format(type), markdown, path, "md.erb")
         
 
 def default_component_user_strings():
@@ -136,10 +137,10 @@ def default_component_user_strings():
     return d
 
 def get_string_replacement_key(type:str, attribute:str):
-    return '{0}-{1}'.format(type, attribute)
+    return '{0}'.format(attribute)
 
 def get_user_string_row(type:str, attribute:str):
-    return '{0}: '.format(get_string_replacement_key(type, attribute))
+    return '- {0}: '.format(get_string_replacement_key(type, attribute))
 
 def get_string_filename(type:str):  
     return '{0}_attr_description'.format(type)
@@ -148,9 +149,9 @@ def get_string_replacement_tag(type:str, attribute:str, file:str):
     # {{ site.data.mdl.Docrelationshiptype_attr_description.Docrelationshiptype-label }} {% assign attr = 'Docrelationshiptype-label' %}
     key = get_string_replacement_key(type, attribute)
     filename = get_string_filename(file)
-    part1 = "site.data.mdl.{0}.{1}".format(filename, key)
-    part2 = "assign attr = '{0}'".format(key)
-    return "{{ " + part1 + " }} {% " + part2 + " %}"
+    part1 = "data.{0}.mdl.each do |mdl| ".format(filename)
+    part2 = "mdl.{0}".format(key)
+    return "<% " + part1 + " %> <%= " + part2 + " %> <% end %>"
 
 def append_attribute_user_string_row(user_strings:list, attributes:list, component:str):
     
@@ -160,7 +161,7 @@ def append_attribute_user_string_row(user_strings:list, attributes:list, compone
 def create_user_strings(type:str, path:str ,json_definition):
         
     user_strings = []
-    
+    Helpers.append_line(user_strings, "mdl:")
     Helpers.append_line(user_strings, get_user_string_row(type, "overview")) 
     Helpers.append_line(user_strings, get_user_string_row(type, "overview_description")) 
     
@@ -197,8 +198,9 @@ def create_user_strings_json(type:str, path:str ,json_definition):
 
     Helpers.dump_json_file(type, user_strings, path)
 
+#yaml files
 def generate_component_string_files(components: list):
-    path = "../output/vault_developer_portal/_data/mdl/" 
+    path = "output/yaml/" 
     print('dumping string files to {0}'.format(path))
     if not os.path.exists(path):
         os.makedirs(path)
@@ -206,8 +208,9 @@ def generate_component_string_files(components: list):
     for type,json_definition in components:
         user_strings = create_user_strings(type, path, json_definition)
 
+# pages (includes)
 def generate_component_pages(components: list):
-    path = "../output/vault_developer_portal/_posts/mdl/" 
+    path = "output/pages/" 
     print('dumping pages {0}'.format(path))
     if not os.path.exists(path):
         os.makedirs(path)
@@ -218,16 +221,6 @@ def generate_component_pages(components: list):
 def create_component_page(type:str, path:str):
         
     md = []    
-        
-    Helpers.append_line(md,'---')
-    Helpers.append_line(md,'layout: devsite')
-    Helpers.append_line(md,'title: \"{0}\"'.format(type))
-    Helpers.append_line(md,'date:   2016-08-31 00:00:00')
-    Helpers.append_line(md,'categories: docs mdl')
-    Helpers.append_line(md,'group: \"mdldoc\"')
-    Helpers.append_line(md,'---')
-    Helpers.append_line(md,'')
-
     Helpers.append_line(md,'# {0}'.format(type))
     Helpers.append_line(md,'')
             
@@ -241,19 +234,21 @@ def create_component_page(type:str, path:str):
     # Helpers.append_line(md,'- [Component Errors](#component-errors)')
     # Helpers.append_line(md,'')
 
-    Helpers.append_line(md,'{{% include_relative {0}-attributes.markdown %}} '.format(type))
-    Helpers.append_line(md,'')
-    
-    Helpers.append_line(md,'## Component Errors')
-    Helpers.append_line(md,'The MDL can raise errors while executing commands on the components for many reasons. The errors which are common to all component are defined in the [Common Errors]({% post_url 2014-12-23-common %}). The following errors (if any) are specific to this component type.')
+    Helpers.append_line(md,'<%= partial "{0}-attributes" %> '.format(type))
     Helpers.append_line(md,'')
 
-    Helpers.append_line(md,'{{% include_relative {0}-errors.markdown %}}'.format(type))  
-    Helpers.append_line(md,'')     
+ # We are calling errors on a seperate page, dont need these here   
+    # Helpers.append_line(md,'## Component Errors')
+    # Helpers.append_line(md,'The MDL can raise errors while executing commands on the components for many reasons. The errors which are common to all component are defined in the [Common Errors]({% post_url 2014-12-23-common %}). The following errors (if any) are specific to this component type.')
+    # Helpers.append_line(md,'')
+    
+    # Helpers.append_line(md,'{{% include_relative {0}-errors.markdown %}}'.format(type))  
+    # Helpers.append_line(md,'')     
         
     Helpers.append_line(md, mdh.get_comment('Auto-generated at ' + str(datetime.datetime.now())))
-
-    Helpers.save_as_file('2016-08-31-' + type, ''.join(md), path, 'markdown')
+    
+    # Name of saved files, we want these pages as includes
+    Helpers.save_as_file('_' + type, ''.join(md), path, 'md.erb')
 
 def main():
     print("""

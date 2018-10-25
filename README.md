@@ -1,12 +1,14 @@
-# Vault
+# Vault Scripts
 
-*Not committed for security reasons - a config.txt file with parameters:*
+### Running a script
+
+*Update config.txt file with parameters for the vault connection details. Example:*
 
 ```
 [credentials]
 domain = dns.vaultdev.com
 username = user.name@domain.com
 password = myP@$$w0rd
-version = 15
+version = 17.3
 test_mode = False
 ```

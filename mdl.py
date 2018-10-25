@@ -81,8 +81,8 @@ def print_component(lst, depth):
         else:
             print("\t"*(depth) + a + "."+ v)
 
-def get_component_type_names(client, from_cache = False):
-    component_types_json = VaultService.get_component_types(client, from_cache)
+def get_component_type_names(client):
+    component_types_json = VaultService.get_component_types(client)
 
     component_type_names = []
     for item in component_types_json:

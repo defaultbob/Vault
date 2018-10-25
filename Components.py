@@ -1,5 +1,3 @@
-"""VAULT API TESTING 01"""
-
 import ConfigParser
 import datetime
 import os
@@ -10,7 +8,7 @@ import mdl
 import sys
 import Helpers
 
-def output_components(path, client, includeWorkflow, filter):
+def output_components(path, client, includeWorkflow):
 
     comps = VaultService.get_component_types(client)
     
@@ -27,10 +25,6 @@ def output_components(path, client, includeWorkflow, filter):
     for component_json in comps:
         component_type = component_json["type"]
         type_folder = (path + "/%s") % (component_type) 
-
-        # print filter
-        if filter != "" and component_type == filter: 
-            break
 
         for component_name in component_json["names"]:
             
@@ -61,13 +55,13 @@ def main():
     \____/\____/_/ /_/ /_/ .___/\____/_/ /_/\___/_/ /_/\__/____/  
                                                                                     
     """
-    filter = "Atomicsecurity"
+    
     client = VaultService.get_client()
     instance_name = datetime.datetime.now()
     path = "../output/MDL API/%s/%s" % (client.domain, instance_name)
 
-    includeWorkflow = False #True 
-    output_components(path, client, includeWorkflow, filter)
+    includeWorkflow = True 
+    output_components(path, client, includeWorkflow)
     print "Done"
 
 if __name__ == '__main__':

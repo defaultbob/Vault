@@ -1,3 +1,5 @@
 /output
 *.pyc
 config.txt
+_gitignore
+/components

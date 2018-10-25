@@ -76,7 +76,7 @@ def create_markdown_file(file_name, errors_resp,  generic_only=False):
                 item.add_example(code)
                 generic_errors[code_num] = item
     
-    Helpers.save_as_file(file_name, build_markdown(generic_errors), '../output/vault_developer_portal/_posts/mdl/', 'markdown')
+    Helpers.save_as_file(file_name, build_markdown(generic_errors), 'output/errors/', 'markdown')
 
 def export_csv(file_name, errors_resp,  generic_only=False):
     generic_errors = collections.OrderedDict()
@@ -111,7 +111,7 @@ def export_csv(file_name, errors_resp,  generic_only=False):
                 Helpers.append_line(csv, ','.join(row))
                 generic_errors[key] = 'X'
             
-    Helpers.append_to_file(file_name, ''.join(csv), '../output/errors/', 'csv')
+    Helpers.append_to_file(file_name, ''.join(csv), 'output/errors/csv/', 'csv')
 
 def main():
     print("""
@@ -152,15 +152,15 @@ def main():
                 create_markdown_file('common-errors', errors_resp, True)
                 
                 header = ['Type', 'Code', 'Reason','Type', 'Developer message', 'End user message\n']
-                Helpers.save_as_file('errors', ','.join(header), '../output/errors/', 'csv')
+                Helpers.save_as_file('errors', ','.join(header), 'output/errors/csv2', 'csv')
                 
-                export_csv('errors', errors_resp, True)
+                #export_csv('errors', errors_resp, True)
                 
                 i+=1
                 first = False
                 
             create_markdown_file('{0}-errors'.format(component_type), errors_resp)
-            export_csv('errors', errors_resp)
+            #export_csv('errors', errors_resp)
 
             printProgress.printProgress(
                 i, l, prefix='Progress:', suffix='Complete' + " - " + component_type, barLength=50)
